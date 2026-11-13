@@ -143,14 +143,23 @@ async function youtubeStills(id, dir, seen) {
 
 // ---------- Vimeo ----------
 async function vimeoConfig(id) {
-  const headers = { 'User-Agent': UA, Referer: 'https://vimeo.com/', Accept: 'application/json,text/html' };
-  const direct = await fetch(`https://player.vimeo.com/video/${id}/config`, { headers }).catch(() => null);
-  if (direct?.ok) { try { return await direct.json(); } catch { /* fall through */ } }
-  const res = await fetch(`https://player.vimeo.com/video/${id}`, { headers }).catch((e) => ({ ok: false, status: e.message }));
-  if (!res.ok) throw new Error(`player page ${res.status} (config ${direct?.status})`);
-  const m = (await res.text()).match(/window\.playerConfig\s*=\s*(\{.*?\});?\s*<\/script>/s);
-  if (!m) throw new Error('no playerConfig in player page');
-  return JSON.parse(m[1]);
+  // Vimeo answers some servers with 401/403; try the ways a real embed would ask before giving up.
+  const site = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL || '';
+  const referers = [site && `${site.replace(/\/$/, '')}/`, 'https://vimeo.com/', null].filter((r) => r !== '');
+  const tried = [];
+  for (const ref of referers) {
+    const headers = { 'User-Agent': UA, Accept: 'text/html,application/json;q=0.9,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.9' };
+    if (ref) { headers.Referer = ref; headers.Origin = new URL(ref).origin; }
+    const direct = await fetch(`https://player.vimeo.com/video/${id}/config`, { headers }).catch(() => null);
+    if (direct?.ok) { try { return await direct.json(); } catch { /* fall through */ } }
+    const res = await fetch(`https://player.vimeo.com/video/${id}`, { headers }).catch(() => null);
+    if (res?.ok) {
+      const m = (await res.text()).match(/window\.playerConfig\s*=\s*(\{.*?\});?\s*<\/script>/s);
+      if (m) return JSON.parse(m[1]);
+    }
+    tried.push(`${ref ? new URL(ref).host : 'no-referer'}: config ${direct?.status ?? 'err'} page ${res?.status ?? 'err'}`);
+  }
+  throw new Error(tried.join('; '));
 }
 
 /** Picks the best (≤1080p) video rendition from an HLS master playlist. */
