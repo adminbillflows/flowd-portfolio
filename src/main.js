@@ -41,6 +41,7 @@ function match(path) {
 }
 
 function pushPath(next) {
+  navDepth++;
   if (STATIC) history.pushState({}, '', next.pathname === '/' ? location.pathname + location.search : '#' + toHash(next.pathname));
   else history.pushState({}, '', next);
 }
@@ -97,12 +98,16 @@ async function navigate(url, { push = true } = {}) {
   busy = false;
 }
 
+let navDepth = 0; // how many in-site pages deep we are, so "back" can return to the previous page
 document.addEventListener('click', (e) => {
+  const back = e.target.closest('[data-back]');
+  if (back) { e.preventDefault(); if (navDepth > 0) history.back(); else navigate('/work'); return; }
   const a = e.target.closest('a[data-link], a[href^="/"]');
   if (!a || a.target === '_blank' || e.metaKey || e.ctrlKey || a.getAttribute('href').startsWith('/admin') || a.getAttribute('href').startsWith('/uploads')) return;
   e.preventDefault();
   navigate(STATIC ? a.getAttribute('href').split('?')[0] : a.href);
 });
+addEventListener('popstate', () => { navDepth = Math.max(0, navDepth - 1); } );
 addEventListener('popstate', () => navigate(STATIC ? currentPath() : location.href, { push: false }));
 
 // ---------- reveal on scroll ----------
@@ -136,7 +141,11 @@ function closeMenu(instant = false) {
   gsap.to('.menu__list li, .menu__foot', { opacity: 0, duration: instant ? 0 : 0.3 });
 }
 menuBtn.addEventListener('click', () => (menuOpen ? closeMenu() : openMenu()));
-addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (menuOpen) closeMenu();
+  else if (document.querySelector('[data-back]') && !document.querySelector('.player.is-playing')) document.querySelector('[data-back]').click();
+});
 
 // ---------- sound ----------
 const soundBtn = document.getElementById('sound-toggle');
