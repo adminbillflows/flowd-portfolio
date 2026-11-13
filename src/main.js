@@ -144,7 +144,7 @@ menuBtn.addEventListener('click', () => (menuOpen ? closeMenu() : openMenu()));
 addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (menuOpen) closeMenu();
-  else if (document.querySelector('[data-back]') && !document.querySelector('.player.is-playing')) document.querySelector('[data-back]').click();
+  else if (document.querySelector('[data-back]')) document.querySelector('[data-back]').click();
 });
 
 // ---------- sound ----------
