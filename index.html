@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>FlowD</title>
+  <meta name="description" content="FlowD portfolio" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Enter gate -->
+  <div class="gate" id="gate">
+    <div class="gate__inner">
+      <img class="gate__logo" data-logo alt="FlowD" />
+      <p class="gate__tagline" data-tagline></p>
+      <div class="gate__progress"><span id="gate-bar"></span></div>
+      <div class="gate__count"><span id="gate-count">0</span>%</div>
+      <div class="gate__actions" id="gate-actions">
+        <button class="gate__btn gate__btn--main" data-enter="sound">Enter</button>
+        <button class="gate__btn" data-enter="mute">Enter without sound</button>
+      </div>
+      <p class="gate__hint">แนะนำให้ใช้หูฟัง · Best with headphones</p>
+    </div>
+  </div>
+
+  <header class="hud">
+    <a href="/" class="hud__logo" data-link aria-label="FlowD home"><img data-logo alt="FlowD" /></a>
+    <div class="hud__right">
+      <button class="hud__sound" id="sound-toggle" aria-pressed="false">
+        <span class="bars"><i></i><i></i><i></i><i></i></span><span class="label">Sound off</span>
+      </button>
+      <button class="hud__menu" id="menu-toggle" aria-expanded="false" aria-controls="menu">
+        <span class="label">Menu</span><span class="burger"><i></i><i></i></span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="menu" id="menu" aria-hidden="true">
+    <div class="menu__bg"></div>
+    <ul class="menu__list">
+      <li><a href="/" data-link><span class="num">01</span><span class="txt">Home</span></a></li>
+      <li><a href="/work" data-link><span class="num">02</span><span class="txt">Works</span></a></li>
+      <li><a href="/about" data-link><span class="num">03</span><span class="txt">About</span></a></li>
+      <li><a href="/contact" data-link><span class="num">04</span><span class="txt">Contact</span></a></li>
+    </ul>
+    <div class="menu__foot">
+      <a class="menu__mail" data-email></a>
+      <div class="menu__socials" data-socials></div>
+    </div>
+  </nav>
+
+  <main id="app"></main>
+
+  <div class="transition" aria-hidden="true"><div class="transition__panel"></div><div class="transition__label"></div></div>
+  <div class="cursor" aria-hidden="true"><div class="cursor__dot"></div><div class="cursor__ring"><span></span></div></div>
+  <div class="preview" aria-hidden="true"><div class="preview__media"></div></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "flowd-portfolio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "FlowD portfolio prototype: three.js + GSAP front end with a small Node back office",
+  "scripts": {
+    "dev": "node server/index.js",
+    "build": "vite build",
+    "start": "node server/index.js --prod"
+  },
+  "engines": { "node": ">=18.18" },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "gsap": "^3.13.0",
+    "multer": "^2.0.2",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

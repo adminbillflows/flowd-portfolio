@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>FlowD — หลังบ้าน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+  <!-- login -->
+  <section class="login" id="login" hidden>
+    <form class="login__card" id="login-form">
+      <h1><img data-logo alt="FlowD"> <span>หลังบ้าน</span></h1>
+      <label>รหัสผ่าน<input type="password" name="password" autocomplete="current-password" required autofocus></label>
+      <button class="btn btn--primary" type="submit">เข้าสู่ระบบ</button>
+      <p class="error" id="login-error"></p>
+    </form>
+  </section>
+
+  <!-- dashboard -->
+  <div class="shell" id="shell" hidden>
+    <aside class="side">
+      <div class="brand"><img data-logo alt="FlowD"> <span>admin</span></div>
+      <nav>
+        <button class="tab is-active" data-tab="works">ผลงาน</button>
+        <button class="tab" data-tab="settings">ข้อมูลเว็บ</button>
+        <button class="tab" data-tab="messages">ข้อความติดต่อ <b id="msg-count"></b></button>
+      </nav>
+      <div class="side__foot">
+        <a href="/" target="_blank">เปิดหน้าเว็บ ↗</a>
+        <button id="logout">ออกจากระบบ</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- works -->
+      <section class="panel" data-panel="works">
+        <header class="panel__head">
+          <div><h2>ผลงาน</h2><p class="hint">ลากแถวเพื่อเรียงลำดับ ลำดับนี้คือลำดับบนหน้าเว็บ</p></div>
+          <button class="btn btn--primary" id="new-work">+ เพิ่มผลงาน</button>
+        </header>
+        <div class="drop-hint" id="quick-drop">ลากไฟล์รูปหรือวิดีโอมาวางตรงนี้ เพื่อสร้างผลงานใหม่ทันที (ไฟล์แรกเป็นภาพปก)</div>
+        <ul class="work-table" id="work-table"></ul>
+      </section>
+
+      <!-- settings -->
+      <section class="panel" data-panel="settings" hidden>
+        <header class="panel__head"><div><h2>ข้อมูลเว็บ</h2><p class="hint">ข้อความที่แสดงบนหน้า Home, About และ Contact</p></div></header>
+        <form class="form" id="settings-form">
+          <div class="row2">
+            <label>ชื่อเว็บ<input name="siteName"></label>
+            <label>อีเมล<input name="email" type="email"></label>
+          </div>
+          <label>สโลแกน (หัวข้อใหญ่หน้าแรก)<input name="tagline"></label>
+          <label>เกี่ยวกับเรา (เว้นบรรทัดว่างเพื่อขึ้นย่อหน้าใหม่)<textarea name="about" rows="6"></textarea></label>
+          <label>บริการ (บรรทัดละหนึ่งรายการ)<textarea name="services" rows="5"></textarea></label>
+          <div class="row2">
+            <label>เบอร์โทร<input name="phone"></label>
+            <label>ที่อยู่<input name="address"></label>
+          </div>
+          <label>โซเชียล (บรรทัดละหนึ่ง: ชื่อ | ลิงก์)<textarea name="socials" rows="4" placeholder="Instagram | https://instagram.com/flowd"></textarea></label>
+          <div class="form__actions"><button class="btn btn--primary" type="submit">บันทึก</button><span class="saved" id="settings-saved"></span></div>
+        </form>
+      </section>
+
+      <!-- messages -->
+      <section class="panel" data-panel="messages" hidden>
+        <header class="panel__head"><div><h2>ข้อความติดต่อ</h2><p class="hint">ข้อความที่ส่งมาจากฟอร์มหน้า Contact</p></div></header>
+        <ul class="messages" id="messages"></ul>
+      </section>
+    </main>
+  </div>
+
+  <!-- editor drawer -->
+  <div class="drawer" id="drawer" hidden>
+    <div class="drawer__scrim" data-close></div>
+    <form class="drawer__panel form" id="work-form">
+      <header class="drawer__head">
+        <h3 id="drawer-title">เพิ่มผลงาน</h3>
+        <button type="button" class="icon" data-close aria-label="ปิด">✕</button>
+      </header>
+      <div class="drawer__body">
+        <label>ชื่อผลงาน *<input name="title" required></label>
+        <div class="row2">
+          <label>หมวดหมู่ *<input name="category" list="cat-list" required placeholder="เช่น Branding, Motion"></label>
+          <label>ปี<input name="year" inputmode="numeric" maxlength="4"></label>
+        </div>
+        <datalist id="cat-list"></datalist>
+        <div class="row2">
+          <label>ลูกค้า<input name="client"></label>
+          <label>หน้าที่ของเรา<input name="role" placeholder="Art direction, 3D"></label>
+        </div>
+        <label>เครดิตทีม (ใครทำส่วนไหน)<input name="credits" placeholder="บัง — แมคคานิค · เป๊าะ — อาร์ต"></label>
+        <label>ลิงก์วิดีโอ (บรรทัดละลิงก์: YouTube, Vimeo, Instagram, Facebook)<textarea name="videos" rows="3" placeholder="https://vimeo.com/123456"></textarea>
+          <small class="note">ถ้ายังไม่มีภาพปก ระบบจะดึงภาพปกจากลิงก์ YouTube หรือ Vimeo ให้อัตโนมัติ</small></label>
+        <label>รายละเอียด<textarea name="description" rows="5"></textarea></label>
+        <div class="row3">
+          <label>สีประจำงาน<input type="color" name="color" value="#4a6b8a"></label>
+          <label class="check"><input type="checkbox" name="published" checked> แสดงบนเว็บ</label>
+          <label class="check"><input type="checkbox" name="featured" checked> โชว์ในฉาก 3D หน้าแรก</label>
+        </div>
+        <label>ลิงก์ (slug)<input name="slug" placeholder="สร้างจากชื่อให้อัตโนมัติ"></label>
+
+        <div class="field">
+          <span class="field__label">ภาพปก (รูปหรือวิดีโอ)</span>
+          <div class="dropzone" id="cover-drop">
+            <div class="dropzone__preview" id="cover-preview"></div>
+            <p>ลากไฟล์มาวาง หรือ <u>เลือกไฟล์</u></p>
+            <input type="file" accept="image/*,video/*" id="cover-input" hidden>
+          </div>
+          <button type="button" class="link" id="cover-remove" hidden>ลบภาพปก</button>
+        </div>
+
+        <div class="field">
+          <span class="field__label">แกลเลอรี (ลากเพื่อเรียงลำดับ)</span>
+          <ul class="gallery" id="gallery"></ul>
+          <div class="dropzone dropzone--small" id="gallery-drop">
+            <p>ลากหลายไฟล์มาวาง หรือ <u>เลือกไฟล์</u></p>
+            <input type="file" accept="image/*,video/*" id="gallery-input" multiple hidden>
+          </div>
+        </div>
+      </div>
+      <footer class="drawer__foot">
+        <button type="button" class="btn btn--danger" id="delete-work" hidden>ลบผลงาน</button>
+        <div class="progress" id="progress" hidden><span></span></div>
+        <button type="button" class="btn" data-close>ยกเลิก</button>
+        <button type="submit" class="btn btn--primary">บันทึก</button>
+      </footer>
+    </form>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="./admin.js"></script>
+</body>
+</html>
