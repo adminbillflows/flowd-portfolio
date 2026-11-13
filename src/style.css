@@ -272,6 +272,11 @@ body.has-gl[data-view='home'] { cursor: grab; }
 .stage__title .w:nth-child(even) > span { color: var(--accent); }
 .stage__client { margin: 10px 0 0; color: var(--muted); }
 .stage__side { position: absolute; right: var(--gutter); bottom: calc(var(--gutter) + 64px); display: grid; justify-items: end; gap: 12px; }
+.stage__fs { padding: 8px 14px; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.35); backdrop-filter: blur(6px); border-radius: 999px; font-size: 13px; transition: background .3s, color .3s; }
+.stage__fs:hover { background: var(--fg); color: var(--ink); }
+.stage:fullscreen { height: 100vh; }
+.stage:fullscreen .stage__ui { padding-top: var(--gutter); }
+.stage:fullscreen [data-back], .stage:fullscreen [data-more] { display: none; }
 .stage__more { font-size: 13px; color: var(--fg); opacity: .8; }
 .stage__more:hover { opacity: 1; color: var(--accent); }
 body.ui-idle .hud { opacity: 0; pointer-events: none; }

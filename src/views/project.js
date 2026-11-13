@@ -90,6 +90,7 @@ function stageHTML(w, i, list, meta, next) {
         <div class="stage__side">
           ${list.length > 1 ? `<div class="player__list">${list.map((u, vi) => `<button class="player__item ${vi ? '' : 'is-active'}" data-i="${vi}">${pad(vi + 1)}</button>`).join('')}</div>` : ''}
           <a class="player__ext" href="${esc(list[0])}" target="_blank" rel="noopener">เปิดใน ${platform(list[0])} ↗</a>
+          <button class="stage__fs" data-fullscreen>เต็มจอ ⤢</button>
           <button class="stage__more" data-more>รายละเอียด ↓</button>
         </div>
       </div>
@@ -138,19 +139,44 @@ function mountStage(el, stage) {
     if (audio.enabled) { setSound(false); document.body.classList.remove('sound-on'); }
   };
   stage.querySelectorAll('.player__item').forEach((b) => b.addEventListener('click', () => load(+b.dataset.i)));
-  shield.addEventListener('click', () => { paused = !paused; command(!paused); wake(); });
+  let clickTimer;
+  shield.addEventListener('click', (e) => {
+    if (e.detail > 1) { clearTimeout(clickTimer); return; }
+    clickTimer = setTimeout(() => { paused = !paused; command(!paused); if (paused) show(); }, 220);
+  });
   stage.querySelector('[data-more]').addEventListener('click', () => el.querySelector('.project__after').scrollIntoView({ behavior: 'smooth' }));
 
-  // title and controls fade away when the mouse rests, come back when it moves
+  // title and controls fade away when the mouse rests. Once hidden, moving over the video does NOT bring them back:
+  // only moving to the top edge, scrolling, a key press or a tap does.
   let timer;
+  const isHidden = () => !stage.classList.contains('ui-on');
   const hide = () => { if (!paused && scrollY < innerHeight * 0.4) { stage.classList.remove('ui-on'); document.body.classList.add('ui-idle'); } };
-  const wake = () => {
+  const show = () => {
     stage.classList.add('ui-on'); document.body.classList.remove('ui-idle');
     clearTimeout(timer); timer = setTimeout(hide, touch ? 3500 : 2200);
   };
-  const events = ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart'];
+  const wake = (e) => {
+    if (e?.type === 'pointermove' && isHidden() && e.clientY > 110) return;
+    if (e?.type === 'pointerdown' && !touch) return;
+    show();
+  };
+  const events = ['pointermove', 'pointerdown', 'keydown', 'scroll', 'wheel', 'touchstart'];
   events.forEach((ev) => addEventListener(ev, wake, { passive: true }));
-  wake();
+
+  // full screen: button, double-click on the video, or the F key
+  const fsBtn = stage.querySelector('[data-fullscreen]');
+  const toggleFs = () => {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else (stage.requestFullscreen || stage.webkitRequestFullscreen)?.call(stage);
+  };
+  const onFsChange = () => { fsBtn.textContent = document.fullscreenElement ? 'ออกจากเต็มจอ ⤡' : 'เต็มจอ ⤢'; };
+  const onKey = (e) => { if ((e.key === 'f' || e.key === 'F') && !e.target.closest?.('input,textarea')) toggleFs(); };
+  fsBtn.addEventListener('click', toggleFs);
+  shield.addEventListener('dblclick', toggleFs);
+  document.addEventListener('fullscreenchange', onFsChange);
+  addEventListener('keydown', onKey);
+  if (!(stage.requestFullscreen || stage.webkitRequestFullscreen)) fsBtn.hidden = true;
+  show();
   // browsers only allow sound after a click, so if the Enter screen is still up, start when it is dismissed
   // show the cover for 2.5 s (with a progress line), then start the video; clicking the cover starts it right away
   const DELAY = 2500;
@@ -167,6 +193,9 @@ function mountStage(el, stage) {
 
   return () => {
     clearTimeout(timer); clearTimeout(startTimer);
+    document.removeEventListener('fullscreenchange', onFsChange);
+    removeEventListener('keydown', onKey);
+    if (document.fullscreenElement) document.exitFullscreen?.();
     events.forEach((ev) => removeEventListener(ev, wake));
     document.body.classList.remove('ui-idle');
   };
