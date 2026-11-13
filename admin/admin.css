@@ -148,3 +148,10 @@ a { color: inherit; }
 .login__card input { padding: 10px 12px; border-radius: 8px; border: 1px solid #333; background: #1b1b1b; color: #fff; font: inherit; }
 .side { background: #0b0b0b; }
 .btn--primary:hover { background: var(--accent); border-color: var(--accent); }
+
+.stills .gitem { aspect-ratio: 16/9; cursor: pointer; }
+.still { transition: opacity .2s, filter .2s; outline: 2px solid transparent; outline-offset: -2px; }
+.still:hover { outline-color: var(--accent); }
+.still.is-hidden { opacity: .35; filter: grayscale(1); }
+.still__badge { position: absolute; left: 4px; bottom: 4px; font-size: 10px; background: rgba(0,0,0,.65); color: #fff; padding: 1px 6px; border-radius: 99px; font-weight: 500; }
+.still.is-hidden .still__badge { background: var(--accent); }

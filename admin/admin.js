@@ -4,7 +4,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const state = { works: [], editing: null, cover: null, removeCover: false, gallery: [] };
+const state = { works: [], editing: null, cover: null, removeCover: false, gallery: [], hidden: new Set() };
 
 async function api(path, opts = {}) {
   const res = await fetch(path, { credentials: 'same-origin', ...opts });
@@ -95,6 +95,7 @@ function openEditor(work = null, files = []) {
   state.editing = work;
   state.cover = null; state.removeCover = false;
   state.gallery = (work?.gallery || []).map((m) => ({ ...m, existing: true }));
+  state.hidden = new Set(work?.stillsHidden || []);
   form.reset();
   $('#drawer-title').textContent = work ? 'แก้ไขผลงาน' : 'เพิ่มผลงาน';
   $('#delete-work').hidden = !work;
@@ -112,7 +113,7 @@ function openEditor(work = null, files = []) {
     addGallery(media.slice(1));
     if (!form.title.value && media[0]) form.title.value = media[0].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
   }
-  renderCover(); renderGallery();
+  renderCover(); renderGallery(); renderStills();
   $('#drawer').hidden = false;
   requestAnimationFrame(() => $('#drawer').classList.add('is-open'));
   setTimeout(() => form.title.focus(), 250);
@@ -153,6 +154,21 @@ sortable($('#gallery'), '.gitem', () => {
   renderGallery();
 });
 
+// auto-captured stills: click to hide/show in the Gallery
+function renderStills() {
+  const stills = state.editing?.stills || [];
+  $('#stills-field').hidden = !stills.length;
+  $('#stills').innerHTML = stills.map((s) => `<li class="gitem still${state.hidden.has(s.url) ? ' is-hidden' : ''}" data-url="${esc(s.url)}" title="คลิกเพื่อซ่อน/แสดง">
+    <img src="${esc(s.url)}" alt="" loading="lazy"><b class="still__badge">${state.hidden.has(s.url) ? 'ซ่อนอยู่' : 'ตอน ' + (s.video + 1)}</b></li>`).join('');
+}
+$('#stills').addEventListener('click', (e) => {
+  const li = e.target.closest('.still');
+  if (!li) return;
+  const u = li.dataset.url;
+  state.hidden.has(u) ? state.hidden.delete(u) : state.hidden.add(u);
+  renderStills();
+});
+
 function dropzone(zone, input, onFiles) {
   zone.addEventListener('click', () => input.click());
   input.addEventListener('change', () => { onFiles([...input.files]); input.value = ''; });
@@ -180,6 +196,7 @@ form.addEventListener('submit', async (e) => {
   let n = 0;
   const order = state.gallery.map((g) => { if (g.file) { fd.append('gallery', g.file); return `new:${n++}`; } return g.url; });
   fd.append('galleryOrder', JSON.stringify(order));
+  if (state.editing) fd.append('stillsHidden', JSON.stringify([...state.hidden]));
   const url = state.editing ? `/api/admin/works/${state.editing.id}` : '/api/admin/works';
   try {
     await upload(state.editing ? 'PUT' : 'POST', url, fd);

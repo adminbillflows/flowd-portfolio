@@ -98,6 +98,11 @@ function applyFields(work, body, works) {
   work.color = /^#[0-9a-f]{6}$/i.test(body.color || '') ? body.color : work.color || '#4a6b8a';
   if (body.featured !== undefined) work.featured = body.featured === 'true' || body.featured === true;
   if (body.published !== undefined) work.published = body.published === 'true' || body.published === true;
+  if (body.stillsHidden !== undefined) {
+    let list = [];
+    try { list = JSON.parse(body.stillsHidden); } catch { /* ignore */ }
+    work.stillsHidden = Array.isArray(list) ? list.filter((u) => typeof u === 'string' && u.startsWith('/uploads/')).slice(0, 500) : [];
+  }
   work.slug = slugify(body.slug || work.slug || work.title, works, work.id);
   work.updatedAt = new Date().toISOString();
 }
@@ -146,7 +151,7 @@ async function fillCover(id) {
 async function fillStills(id) {
   const work = getWorks().find((w) => w.id === id);
   if (!work) return;
-  const key = JSON.stringify(work.videos || []);
+  const key = 'v2:' + JSON.stringify(work.videos || []);
   if (work.stillsKey === key && work.stills?.length) return;
   const stills = await stillsFor(work, uploadsDir).catch(() => []);
   const works = getWorks();
@@ -170,7 +175,11 @@ app.use(cookieParser());
 app.use('/uploads', express.static(uploadsDir, { maxAge: '7d' }));
 
 // public API
-app.get('/api/works', (_req, res) => res.json(getWorks().filter((w) => w.published)));
+app.get('/api/works', (_req, res) => res.json(getWorks().filter((w) => w.published).map((w) => {
+  const hidden = new Set(w.stillsHidden || []);
+  const { stillsHidden, stillsKey, ...pub } = w;
+  return { ...pub, stills: (w.stills || []).filter((s) => !hidden.has(s.url)) };
+})));
 app.get('/api/settings', (_req, res) => res.json(readJSON(files.settings)));
 app.post('/api/contact', (req, res) => {
   const { name = '', email = '', message = '' } = req.body || {};
