@@ -8,7 +8,7 @@ export const contact = {
     const s = ctx.settings;
     return `<section class="page contact">
       <header class="page__head">
-        <p class="page__kicker">04 — Contact</p>
+        <p class="page__kicker">05 — Contact</p>
         <h1 class="contact__big"><span class="w"><span>Let's make</span></span> <span class="w"><span><em>something move.</em></span></span></h1>
       </header>
       <div class="contact__grid">

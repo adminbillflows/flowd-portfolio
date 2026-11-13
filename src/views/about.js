@@ -8,7 +8,7 @@ export const about = {
     const s = ctx.settings;
     return `<section class="page about">
       <header class="page__head">
-        <p class="page__kicker">03 — Studio</p>
+        <p class="page__kicker">04 — Studio</p>
         <h1 class="about__statement">${splitWords(s.tagline)}</h1>
       </header>
       <div class="about__grid">

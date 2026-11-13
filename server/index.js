@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stillsFor } from './stills.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 loadEnv(path.join(root, '.env'));
@@ -141,7 +142,24 @@ async function fillCover(id) {
     }
   } finally { coverQueue.delete(id); }
 }
-setTimeout(async () => { for (const w of getWorks()) await fillCover(w.id).catch(() => {}); }, 500);
+// gallery stills: made in the background, one work at a time
+async function fillStills(id) {
+  const work = getWorks().find((w) => w.id === id);
+  if (!work) return;
+  const key = JSON.stringify(work.videos || []);
+  if (work.stillsKey === key && work.stills?.length) return;
+  const stills = await stillsFor(work, uploadsDir).catch(() => []);
+  const works = getWorks();
+  const fresh = works.find((w) => w.id === id);
+  if (!fresh) return;
+  fresh.stills = stills; fresh.stillsKey = key;
+  writeJSON(files.works, works);
+  console.log(`stills: ${fresh.title} → ${stills.length}`);
+}
+setTimeout(async () => {
+  for (const w of getWorks()) await fillCover(w.id).catch(() => {});
+  for (const w of getWorks()) await fillStills(w.id).catch(() => {});
+}, 500);
 
 // ---------- app ----------
 const app = express();
@@ -200,7 +218,7 @@ app.post('/api/admin/works', requireAdmin, mediaFields, (req, res) => {
   work.gallery = (req.files?.gallery || []).map(toMedia);
   works.push(work);
   writeJSON(files.works, works);
-  fillCover(work.id).catch(() => {});
+  fillCover(work.id).then(() => fillStills(work.id)).catch(() => {});
   res.json(work);
 });
 
@@ -222,7 +240,7 @@ app.put('/api/admin/works/:id', requireAdmin, mediaFields, (req, res) => {
     work.gallery = next;
   } else work.gallery.push(...uploaded);
   writeJSON(files.works, works);
-  fillCover(work.id).catch(() => {});
+  fillCover(work.id).then(() => fillStills(work.id)).catch(() => {});
   res.json(work);
 });
 

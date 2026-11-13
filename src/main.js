@@ -9,6 +9,7 @@ import { works } from './views/works.js';
 import { project } from './views/project.js';
 import { about } from './views/about.js';
 import { contact } from './views/contact.js';
+import { gallery } from './views/gallery.js';
 import logoUrl from './assets/logo.png';
 
 gsap.registerPlugin(ScrollTrigger, CustomEase);
@@ -29,6 +30,7 @@ const routes = [
   [/^\/$/, home],
   [/^\/work\/?$/, works],
   [/^\/work\/([^/]+)\/?$/, project, (m) => ({ slug: decodeURIComponent(m[1]) })],
+  [/^\/gallery\/?$/, gallery],
   [/^\/about\/?$/, about],
   [/^\/contact\/?$/, contact],
 ];

@@ -183,12 +183,14 @@ function mountStage(el, stage) {
   const start = () => {
     shield.hidden = true;
     gsap.fromTo(poster.querySelector('.stage__countdown'), { scaleX: 0 }, { scaleX: 1, duration: DELAY / 1000, ease: 'none' });
-    startTimer = setTimeout(() => load(0), DELAY);
+    startTimer = setTimeout(() => load(startAt()), DELAY);
   };
-  poster.addEventListener('click', () => load(0));
+  poster.addEventListener('click', () => load(startAt()));
   const gate = document.getElementById('gate');
   if (gate) gate.addEventListener('click', (e) => { if (e.target.closest('[data-enter]')) start(); });
   else start();
+  // a link from the Gallery can ask for a specific episode (?v=2)
+  function startAt() { return Math.min(list.length - 1, Math.max(0, +(new URLSearchParams(location.search).get('v') || 0))); }
   gsap.from(stage.querySelectorAll('.stage__title .w > span'), { yPercent: 110, duration: 1.2, stagger: 0.06, ease: 'expo.out', delay: 0.4 });
 
   return () => {

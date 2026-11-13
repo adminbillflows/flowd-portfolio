@@ -74,7 +74,7 @@ body.is-reduced #gl { display: none; }
 .menu__list li { overflow: hidden; border-bottom: 1px solid rgba(10,11,13,.12); }
 .menu__list a { display: flex; align-items: baseline; gap: 2vw; padding: 1.2vh 0; }
 .menu__list .num { font-size: 13px; width: 3ch; opacity: .5; font-variant-numeric: tabular-nums; }
-.menu__list .txt { font-family: var(--font-display); text-transform: uppercase; font-size: clamp(54px, 11vh, 130px); line-height: 1; transition: transform .7s var(--ease), color .3s; }
+.menu__list .txt { font-family: var(--font-display); text-transform: uppercase; font-size: clamp(48px, 9.5vh, 120px); line-height: 1; transition: transform .7s var(--ease), color .3s; }
 .menu__list a:hover .txt, .menu__list a.is-current .txt { color: var(--fg); transform: translateX(2vw); }
 .menu__list a.is-current .num::after { content: ' •'; }
 .menu__foot { position: relative; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 5vh; color: var(--ink); font-size: 14px; }
@@ -295,4 +295,36 @@ body[data-view='project'] .cursor { display: none; }
   .stage__side { left: var(--gutter); right: var(--gutter); justify-items: start; bottom: var(--gutter); }
   .player__list { justify-content: flex-start; max-width: none; }
   .stage__shield { display: none; }
+}
+
+/* gallery: a wall of stills that glides with the mouse */
+.gallery-page { position: relative; height: 100vh; height: 100svh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; padding-top: 104px; }
+.gallery-page__head { display: flex; align-items: baseline; gap: 18px; padding: 0 var(--gutter); }
+.gallery-page__head .page__kicker { margin: 0; }
+.gallery-page__title { font-family: var(--font-display); text-transform: uppercase; font-weight: 400; font-size: clamp(32px, 4vw, 56px); line-height: 1; margin: 0; }
+.gal { position: relative; min-height: 0; padding: 18px 0 150px; }
+.gal__rows { height: 100%; display: grid; grid-auto-rows: 1fr; gap: 14px; }
+.gal__row { display: flex; gap: 14px; height: 100%; min-height: 0; padding: 0 var(--gutter); will-change: transform; width: max-content; }
+.gal__item { position: relative; height: 100%; aspect-ratio: 16/9; flex: none; display: block; }
+.gal__row:nth-child(2) .gal__item:nth-child(3n+1) { aspect-ratio: 4/3; }
+.gal__frame { position: absolute; inset: 0; overflow: hidden; border-radius: 4px; background: #151515; transition: transform .6s var(--ease), box-shadow .5s, filter .5s; }
+.gal__frame img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.22); transition: filter .5s ease; will-change: transform; }
+.gal__cap { display: none; }
+.gal.has-active .gal__item:not(.is-active) .gal__frame { filter: grayscale(.85) brightness(.4); }
+.gal__item.is-active { z-index: 2; }
+.gal__item.is-active .gal__frame { transform: scale(1.06); box-shadow: 0 0 0 2px var(--accent), 0 24px 60px rgba(0,0,0,.6); }
+.gal-info { position: absolute; left: var(--gutter); right: var(--gutter); bottom: var(--gutter); pointer-events: none; display: grid; gap: 4px; opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .6s var(--ease); }
+.gal-info.is-on { opacity: 1; transform: none; }
+.gal-info__kicker { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.gal-info__title { margin: 0; font-family: var(--font-display); text-transform: uppercase; font-weight: 400; font-size: clamp(28px, 3.4vw, 52px); line-height: 1; }
+.gal-info__meta { margin: 0; color: var(--muted); font-size: 14px; }
+.gal-info__cta { position: absolute; right: 0; bottom: 4px; font-size: 13px; color: var(--fg); }
+.gal-hint { position: absolute; right: var(--gutter); top: 116px; margin: 0; font-size: 12px; color: var(--muted); }
+@media (pointer: coarse), (max-width: 700px) {
+  .gallery-page { height: auto; overflow: visible; display: block; padding-bottom: 60px; }
+  .gal { padding: 18px 0 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .gal__rows { height: auto; }
+  .gal__row { height: 34vw; min-height: 150px; }
+  .gal__cap { display: block; position: absolute; left: 8px; bottom: 6px; font-size: 11px; text-shadow: 0 1px 4px #000; }
+  .gal-info, .gal-hint { display: none; }
 }
