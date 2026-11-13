@@ -104,6 +104,20 @@ async function pickDistinct(files, max, seen) {
   return kept.sort((a, b) => files.indexOf(a.f) - files.indexOf(b.f)).map((r) => r.f);
 }
 
+// Stills captured elsewhere and committed to the repo (Vimeo refuses requests from cloud servers,
+// so those frames are captured in a browser once and shipped in server/seed-stills/).
+const SEED_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), 'seed-stills');
+function fromSeed(dir, kind, id) {
+  try {
+    const names = JSON.parse(fs.readFileSync(path.join(SEED_DIR, `still-${kind}-${id}.json`), 'utf8'));
+    for (const n of names) {
+      const to = path.join(dir, n);
+      if (!fs.existsSync(to)) fs.copyFileSync(path.join(SEED_DIR, n), to);
+    }
+    return names;
+  } catch { return null; }
+}
+
 const cachePath = (dir, kind, id) => path.join(dir, `still-${kind}-${id}.json`);
 function readCache(dir, kind, id) {
   try {
@@ -273,7 +287,7 @@ export async function framesFromFile(src, max, prefix, seen) {
 }
 
 async function vimeoStills(id, dir, seen) {
-  const cached = readCache(dir, 'vm', id);
+  const cached = fromSeed(dir, 'vm', id) || readCache(dir, 'vm', id);
   if (cached) { for (const n of cached) { const s = await signature(path.join(dir, n)).catch(() => null); if (s) seen.push(s); } return cached; }
   if (!ffmpeg) throw new Error('ffmpeg-static missing');
   const cfg = await vimeoConfig(id);
