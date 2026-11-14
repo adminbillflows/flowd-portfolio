@@ -7,7 +7,7 @@ export const about = {
   title: () => 'About',
   render(ctx) {
     const s = ctx.settings;
-    if (isPhone()) return panelsHTML({ view: 'about', kicker: '04 — Studio', panels: [
+    if (isPhone()) return panelsHTML({ view: 'about', kicker: '05 — Studio', panels: [
       { cls: 'ph-about ph-about--lead', html: `<h1 class="about__statement">${splitWords(s.tagline)}</h1><p class="ph__swipe">ปัดซ้ายเพื่ออ่านต่อ →</p>` },
       { cls: 'ph-about ph-about--text', html: `<p class="page__kicker">About</p><div class="about__text">${paragraphs(s.about)}</div>` },
       { cls: 'ph-about', html: `<p class="page__kicker">Services</p><ol class="ph-services">${(s.services || []).map((x, i) => `<li><span>${pad(i + 1)}</span>${esc(x)}</li>`).join('')}</ol>` },
@@ -15,7 +15,7 @@ export const about = {
     ] });
     return `<section class="page about">
       <header class="page__head">
-        <p class="page__kicker">04 — Studio</p>
+        <p class="page__kicker">05 — Studio</p>
         <h1 class="about__statement">${splitWords(s.tagline)}</h1>
       </header>
       <div class="about__grid">

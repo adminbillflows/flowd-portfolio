@@ -431,3 +431,28 @@ body.is-phone[data-view='project'] .pager { display: none; }
 .pager__arrow { font-size: 14px; letter-spacing: 0; color: var(--accent); animation: pagerNudge 1.8s ease-in-out infinite; }
 @keyframes pagerNudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 body.menu-open .pager { display: none !important; }
+
+/* ---------- event ---------- */
+.ev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px var(--gutter); }
+.ev-card { display: grid; gap: 6px; }
+.ev-card__pic { aspect-ratio: 16/10; overflow: hidden; background: #151515; border-radius: 4px; }
+.ev-card__pic img, .ev-card__pic video { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.ev-card:hover .ev-card__pic img, .ev-card:hover .ev-card__pic video { transform: scale(1.05); }
+.ev-card__num { font-size: 12px; color: var(--accent); margin-top: 8px; }
+.ev-card__title { font: 400 clamp(26px, 2.6vw, 40px)/1.05 Anton, Kanit, sans-serif; text-transform: uppercase; }
+.ev-card__meta { font-size: 12px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.ev-media { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 50px; }
+.ev-item { position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; background: #151515; border-radius: 4px; }
+.ev-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+a.ev-item:hover img { transform: scale(1.05); }
+.ev-item__play { position: absolute; left: 12px; bottom: 12px; padding: 9px 14px; border-radius: 99px; background: var(--accent); color: #fff; font: 600 12px/1 Kanit, Montserrat, sans-serif; }
+.ev-empty { margin: 40px 0; }
+@media (max-width: 900px) { .ev-grid { grid-template-columns: repeat(2, 1fr); } }
+.ph-event { justify-content: center; }
+.ph-event .ev-card__title { font-size: 40px; }
+.ph-evd { justify-content: center; }
+.ph-evd .ev-item { aspect-ratio: auto; height: min(62vh, 520px); }
+.ph-evd--intro { justify-content: flex-start; padding-top: 24px; overflow-y: auto; overscroll-behavior: contain; }
+.ph-evd--intro .project__title { font-size: clamp(40px, 12vw, 64px); }
+.ph-evd__meta { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.ph-evd__text { font-size: 16px; line-height: 1.55; }

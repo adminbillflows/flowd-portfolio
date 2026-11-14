@@ -8,7 +8,7 @@ const PER_PAGE = 4;
 function phoneHTML(ctx) {
   const pages = [];
   for (let i = 0; i < ctx.works.length; i += PER_PAGE) pages.push(ctx.works.slice(i, i + PER_PAGE).map((w, k) => [w, i + k]));
-  return panelsHTML({ view: 'works', kicker: `02 — Event · ${pad(ctx.works.length)}`, panels: pages.map((list) => ({ cls: 'ph-works', html: list.map(([w, i]) => `
+  return panelsHTML({ view: 'works', kicker: `03 — Works · ${pad(ctx.works.length)}`, panels: pages.map((list) => ({ cls: 'ph-works', html: list.map(([w, i]) => `
     <a class="ph-work" href="/work/${encodeURIComponent(w.slug)}?play" data-link>
       <span class="ph-work__thumb">${coverHTML(w, i)}</span>
       <span class="ph-work__num">${pad(i + 1)}</span>
@@ -20,7 +20,7 @@ function phoneHTML(ctx) {
 
 export const works = {
   mode: 'works',
-  title: () => 'Event',
+  title: () => 'Works',
   render(ctx) {
     if (isPhone()) return phoneHTML(ctx);
     const cats = [...new Set(ctx.works.map((w) => w.category))];
@@ -28,8 +28,8 @@ export const works = {
     const count = (c) => ctx.works.filter((w) => c === 'all' || w.category === c).length;
     return `<section class="page works">
       <header class="page__head">
-        <p class="page__kicker">02 — Index</p>
-        <h1 class="page__title">Event <sup>${pad(ctx.works.length)}</sup></h1>
+        <p class="page__kicker">03 — Index</p>
+        <h1 class="page__title">Works <sup>${pad(ctx.works.length)}</sup></h1>
       </header>
       <div class="filters" role="tablist">
         ${['all', ...cats].map((c) => `<button class="filter ${c === active ? 'is-active' : ''}" data-cat="${esc(c)}" role="tab" aria-selected="${c === active}">

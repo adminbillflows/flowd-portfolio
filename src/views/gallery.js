@@ -25,7 +25,7 @@ export const gallery = {
   render() {
     return `<section class="gallery-page">
       <header class="gallery-page__head">
-        <p class="page__kicker">03 — Stills</p>
+        <p class="page__kicker">04 — Stills</p>
         <h1 class="gallery-page__title">Gallery</h1>
       </header>
       <div class="gal" data-gal><div class="gal__rows"></div></div>

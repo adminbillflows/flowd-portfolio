@@ -10,6 +10,7 @@ import { project } from './views/project.js';
 import { about } from './views/about.js';
 import { contact } from './views/contact.js';
 import { gallery } from './views/gallery.js';
+import { eventList, eventDetail } from './views/event.js';
 import logoUrl from './assets/logo.png';
 import { phoneMQ } from './phone.js';
 
@@ -18,8 +19,8 @@ CustomEase.create('flow', '0.76, 0, 0.24, 1');
 
 // Static demo build (no server): data comes from the seed file and routes live in the hash.
 const STATIC = import.meta.env.VITE_STATIC === '1';
-const toHash = (path) => path === '/' ? '' : path === '/work' ? 'works' : path.startsWith('/work/') ? 'project-' + path.slice(6) : path.slice(1);
-const fromHash = (h) => { h = decodeURIComponent(h.replace(/^#/, '')); return !h ? '/' : h === 'works' ? '/work' : h.startsWith('project-') ? '/work/' + h.slice(8) : '/' + h; };
+const toHash = (path) => path === '/' ? '' : path === '/work' ? 'works' : path.startsWith('/work/') ? 'project-' + path.slice(6) : path.startsWith('/event/') ? 'event-' + path.slice(7) : path.slice(1);
+const fromHash = (h) => { h = decodeURIComponent(h.replace(/^#/, '')); return !h ? '/' : h === 'works' ? '/work' : h.startsWith('project-') ? '/work/' + h.slice(8) : h.startsWith('event-') ? '/event/' + h.slice(6) : '/' + h; };
 const currentPath = () => (STATIC ? fromHash(location.hash) : location.pathname);
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || new URLSearchParams(location.search).has('lite');
@@ -29,6 +30,8 @@ const ctx = { works: [], settings: {}, world: null, onActive: null };
 // ---------- routes ----------
 const routes = [
   [/^\/$/, home],
+  [/^\/event\/?$/, eventList],
+  [/^\/event\/([^/]+)\/?$/, eventDetail, (m) => ({ slug: decodeURIComponent(m[1]) })],
   [/^\/work\/?$/, works],
   [/^\/work\/([^/]+)\/?$/, project, (m) => ({ slug: decodeURIComponent(m[1]) })],
   [/^\/gallery\/?$/, gallery],
@@ -121,7 +124,7 @@ addEventListener('popstate', () => { navDepth = Math.max(0, navDepth - 1); } );
 addEventListener('popstate', () => navigate(STATIC ? currentPath() : location.href, { push: false }));
 
 // ---------- phones: fixed pages, swipe up/down to move between them ----------
-const ORDER = [['/', 'Home'], ['/work', 'Event'], ['/gallery', 'Gallery'], ['/about', 'About'], ['/contact', 'Contact']];
+const ORDER = [['/', 'Home'], ['/event', 'Event'], ['/work', 'Works'], ['/gallery', 'Gallery'], ['/about', 'About'], ['/contact', 'Contact']];
 const pageIndex = (path) => ORDER.findIndex(([p]) => p === (path.replace(/\/+$/, '') || '/'));
 const pager = document.createElement('nav');
 pager.className = 'pager';

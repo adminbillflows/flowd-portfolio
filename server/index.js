@@ -96,6 +96,7 @@ function applyFields(work, body, works) {
   }
   work.videos ||= [];
   work.color = /^#[0-9a-f]{6}$/i.test(body.color || '') ? body.color : work.color || '#4a6b8a';
+  if (body.isEvent !== undefined) work.isEvent = body.isEvent === 'true' || body.isEvent === true;
   if (body.featured !== undefined) work.featured = body.featured === 'true' || body.featured === true;
   if (body.published !== undefined) work.published = body.published === 'true' || body.published === true;
   if (body.stillsHidden !== undefined) {

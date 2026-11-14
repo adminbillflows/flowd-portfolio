@@ -54,7 +54,7 @@ async function loadWorks() {
       <span class="num">${String(i + 1).padStart(2, '0')}</span>
       ${thumb(w.cover, w.color)}
       <span class="work__title"><strong>${esc(w.title)}</strong><small>${esc(w.category)} · ${esc(w.year || '—')} · ${(w.videos || []).length} ลิงก์ · ${w.gallery.length} รูป</small></span>
-      <span class="badges">${w.published ? '' : '<b class="badge">ซ่อน</b>'}${w.featured ? '<b class="badge badge--accent">หน้าแรก</b>' : ''}</span>
+      <span class="badges">${w.published ? '' : '<b class="badge">ซ่อน</b>'}${w.featured ? '<b class="badge badge--accent">หน้าแรก</b>' : ''}${w.isEvent ? '<b class="badge badge--accent">Event</b>' : ''}</span>
       <a class="link" href="/work/${encodeURIComponent(w.slug)}" target="_blank">ดู ↗</a>
       <button class="btn btn--small" data-edit="${w.id}">แก้ไข</button>
     </li>`).join('') : '<li class="empty">ยังไม่มีผลงาน กด “เพิ่มผลงาน” หรือลากไฟล์มาวางด้านบน</li>';
@@ -103,7 +103,7 @@ function openEditor(work = null, files = []) {
     for (const k of ['title', 'category', 'year', 'client', 'role', 'description', 'slug', 'credits']) form[k].value = work[k] || '';
     form.videos.value = (work.videos || []).join('\n');
     form.color.value = work.color || '#4a6b8a';
-    form.published.checked = work.published; form.featured.checked = work.featured;
+    form.published.checked = work.published; form.featured.checked = work.featured; form.isEvent.checked = !!work.isEvent;
   } else {
     form.color.value = randomColor();
   }
@@ -191,6 +191,7 @@ form.addEventListener('submit', async (e) => {
   for (const k of ['title', 'category', 'year', 'client', 'role', 'description', 'slug', 'color', 'credits', 'videos']) fd.append(k, form[k].value);
   fd.append('published', form.published.checked);
   fd.append('featured', form.featured.checked);
+  fd.append('isEvent', form.isEvent.checked);
   if (state.cover) fd.append('cover', state.cover.file);
   if (state.removeCover) fd.append('removeCover', '1');
   let n = 0;

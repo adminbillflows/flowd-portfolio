@@ -7,7 +7,7 @@ export const contact = {
   title: () => 'Contact',
   render(ctx) {
     const s = ctx.settings;
-    if (isPhone()) return panelsHTML({ view: 'contact', kicker: '05 — Contact', panels: [
+    if (isPhone()) return panelsHTML({ view: 'contact', kicker: '06 — Contact', panels: [
       { cls: 'ph-contact', html: `<h1 class="contact__big"><span class="w"><span>Let's make</span></span> <span class="w"><span><em>something move.</em></span></span></h1>
         <div class="contact__info">
           <a class="contact__mail" href="mailto:${esc(s.email)}">${esc(s.email)}</a>
@@ -26,7 +26,7 @@ export const contact = {
     ] });
     return `<section class="page contact">
       <header class="page__head">
-        <p class="page__kicker">05 — Contact</p>
+        <p class="page__kicker">06 — Contact</p>
         <h1 class="contact__big"><span class="w"><span>Let's make</span></span> <span class="w"><span><em>something move.</em></span></span></h1>
       </header>
       <div class="contact__grid">

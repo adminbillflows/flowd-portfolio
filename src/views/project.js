@@ -21,7 +21,7 @@ export const project = {
     return `<article class="page project">
       <header class="project__head">
         <a class="back" href="/work" data-back><span class="arrow">←</span> กลับ</a>
-        <p class="page__kicker"><a href="/work" data-link>Event</a> / ${pad(i + 1)} — ${esc(w.category)}</p>
+        <p class="page__kicker"><a href="/work" data-link>Works</a> / ${pad(i + 1)} — ${esc(w.category)}</p>
         <h1 class="project__title">${splitWords(w.title)}</h1>
       </header>
       <div class="project__cover" data-parallax>${coverHTML(w, i)}</div>
