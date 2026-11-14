@@ -56,3 +56,34 @@ export function blip(freq = 880, vol = 0.04) {
   g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
   o.connect(g).connect(master); o.start(); o.stop(ctx.currentTime + 0.3);
 }
+
+/** Air "whoosh" layered over a cover on hover: a short band-passed noise sweep plus a soft low hit. */
+let noiseBuf;
+export function whoosh({ up = true, vol = 0.07, dur = 0.55, hit = true } = {}) {
+  if (!audio.enabled || !ctx) return;
+  const t = ctx.currentTime;
+  if (!noiseBuf) {
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(up ? 300 : 2400, t);
+  bp.frequency.exponentialRampToValueAtTime(up ? 2400 : 300, t + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.45);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(master); src.start(t); src.stop(t + dur + 0.05);
+  if (!hit) return;
+  const o = ctx.createOscillator(), og = ctx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(120, t + dur * 0.4);
+  o.frequency.exponentialRampToValueAtTime(48, t + dur * 0.4 + 0.35);
+  og.gain.setValueAtTime(0.0001, t);
+  og.gain.setValueAtTime(0.0001, t + dur * 0.4);
+  og.gain.exponentialRampToValueAtTime(vol * 1.4, t + dur * 0.4 + 0.02);
+  og.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.4 + 0.45);
+  o.connect(og).connect(master); o.start(t); o.stop(t + dur + 0.6);
+}

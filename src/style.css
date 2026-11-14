@@ -435,9 +435,24 @@ body.menu-open .pager { display: none !important; }
 /* ---------- event ---------- */
 .ev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px var(--gutter); }
 .ev-card { display: grid; gap: 6px; }
-.ev-card__pic { aspect-ratio: 16/10; overflow: hidden; background: #151515; border-radius: 4px; }
-.ev-card__pic img, .ev-card__pic video { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
-.ev-card:hover .ev-card__pic img, .ev-card:hover .ev-card__pic video { transform: scale(1.05); }
+.ev-card__pic { position: relative; display: block; aspect-ratio: 16/10; overflow: hidden; background: #151515; border-radius: 4px; }
+/* parallax: the cover sits larger than its frame and is moved by JS (pointer + scroll) */
+.ev-card__layer { position: absolute; inset: -9%; display: block; will-change: transform; }
+.ev-card__layer img, .ev-card__layer video { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease), filter .8s; }
+.ev-card.is-hot .ev-card__layer img, .ev-card.is-hot .ev-card__layer video { transform: scale(1.06); filter: saturate(1.15) contrast(1.05); }
+/* FX layer over the cover: a light that follows the pointer, a sweep on hover, film grain */
+.ev-card__fx { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .0; transition: opacity .6s;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,90,31,.55), transparent 50%); }
+.ev-card__fx::before { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.22) 50%, transparent 65%); transform: translateX(-120%); }
+.ev-card__fx::after { content: ''; position: absolute; inset: -50%; opacity: .14; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: evGrain .9s steps(4) infinite; }
+.ev-card.is-hot .ev-card__fx { opacity: 1; }
+.ev-card.is-hot .ev-card__fx::before { transform: translateX(120%); transition: transform 1.1s var(--ease); }
+@keyframes evGrain { 0% { transform: translate(0, 0); } 25% { transform: translate(-6%, 4%); } 50% { transform: translate(5%, -3%); } 75% { transform: translate(-3%, -6%); } 100% { transform: translate(0, 0); } }
+.ph-event .ev-card__fx { opacity: .7; }
+.ph-event .ev-card__fx::before { animation: evSweep 4.5s var(--ease) infinite; }
+@keyframes evSweep { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 .ev-card__num { font-size: 12px; color: var(--accent); margin-top: 8px; }
 .ev-card__title { font: 400 clamp(26px, 2.6vw, 40px)/1.05 Anton, Kanit, sans-serif; text-transform: uppercase; }
 .ev-card__meta { font-size: 12px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
@@ -452,6 +467,21 @@ a.ev-item:hover img { transform: scale(1.05); }
 .ph-event .ev-card__title { font-size: 40px; }
 .ph-evd { justify-content: center; }
 .ph-evd .ev-item { aspect-ratio: auto; height: min(62vh, 520px); }
+.ph-evd--float .ev-item { animation: evBob 6.5s ease-in-out infinite; animation-delay: var(--d, 0s); box-shadow: 0 18px 44px rgba(0,0,0,.5); }
+.ph-evd--float .ev-item img, .ph-evd--float .ev-item video { animation: evKen 14s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+@keyframes evBob { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-1.2deg); } 50% { transform: translate3d(6px, -14px, 0) rotate(1.2deg); } }
+@keyframes evKen { from { transform: scale(1.04) translate(-1.5%, 1%); } to { transform: scale(1.14) translate(1.5%, -1.5%); } }
+/* event detail (desktop): floating album under the title */
+.ev-float-page { padding-top: 96px; }
+.ev-float__head { align-items: flex-start; position: relative; z-index: 120; pointer-events: none; }
+.ev-float__head a, .ev-float__head .back { pointer-events: auto; }
+.ev-float__head .back { margin-top: 6px; }
+.ev-float__head .page__kicker { margin: 0 0 8px; }
+.ev-float__title { font-size: clamp(30px, 3.6vw, 56px); text-shadow: 0 4px 30px rgba(0,0,0,.6); }
+.ev-float__text { max-width: 60ch; margin-top: 10px; color: var(--muted); }
+.ev-float .fl-item--clip video { pointer-events: none; }
+.ev-float-page .gal-hint { top: 104px; }
+@media (prefers-reduced-motion: reduce) { .ph-evd--float .ev-item, .ph-evd--float .ev-item img, .ph-evd--float .ev-item video, .ev-card__fx::after { animation: none; } }
 .ph-evd--intro { justify-content: flex-start; padding-top: 24px; overflow-y: auto; overscroll-behavior: contain; }
 .ph-evd--intro .project__title { font-size: clamp(40px, 12vw, 64px); }
 .ph-evd__meta { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
