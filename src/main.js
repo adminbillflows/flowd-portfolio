@@ -121,7 +121,7 @@ addEventListener('popstate', () => { navDepth = Math.max(0, navDepth - 1); } );
 addEventListener('popstate', () => navigate(STATIC ? currentPath() : location.href, { push: false }));
 
 // ---------- phones: fixed pages, swipe up/down to move between them ----------
-const ORDER = [['/', 'Home'], ['/work', 'Works'], ['/gallery', 'Gallery'], ['/about', 'About'], ['/contact', 'Contact']];
+const ORDER = [['/', 'Home'], ['/work', 'Event'], ['/gallery', 'Gallery'], ['/about', 'About'], ['/contact', 'Contact']];
 const pageIndex = (path) => ORDER.findIndex(([p]) => p === (path.replace(/\/+$/, '') || '/'));
 const pager = document.createElement('nav');
 pager.className = 'pager';
