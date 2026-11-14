@@ -414,8 +414,9 @@ body.is-phone:not([data-view='project']) #app { height: 100vh; height: 100svh; o
 .ph-contact .contact__socials { margin-top: 12px; }
 .ph-contact--form { justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; padding-top: 20px; }
 /* gallery fills the fixed page */
-body.is-phone .gallery-page { height: 100%; padding-top: calc(env(safe-area-inset-top, 0px) + 78px); }
-body.is-phone .gal { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 46px); }
+body.is-phone .gallery-page { position: fixed; inset: 0; height: auto; padding-top: calc(env(safe-area-inset-top, 0px) + 74px); }
+body.is-phone .gallery-page__head { padding-bottom: 0; }
+body.is-phone .gal { padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 36px); }
 body.is-phone[data-view='reel'] .reel__all { margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px); }
 /* page dots on the right edge, and the name of the next page at the bottom */
 .pager { display: none; }
