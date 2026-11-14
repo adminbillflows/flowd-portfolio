@@ -35,7 +35,7 @@ export const gallery = {
         <p class="gal-info__meta"></p>
         <span class="gal-info__cta">▶ คลิกเพื่อดูวิดีโอ</span>
       </aside>
-      <p class="gal-hint">เลื่อนเมาส์ไปซ้าย–ขวา หรือหมุนลูกกลิ้ง</p>
+      <p class="gal-hint">ลาก เลื่อนเมาส์ไปขอบ หรือหมุนลูกกลิ้ง</p>
     </section>`;
   },
   async mount(el, ctx) {
@@ -44,17 +44,21 @@ export const gallery = {
     if (!el.isConnected) return;
     const items = collect(works);
     const rowsEl = el.querySelector('.gal__rows');
-    const ROWS = innerHeight < 640 || innerWidth < 700 ? 2 : 3;
+    const ROWS = 4;
     const rows = Array.from({ length: ROWS }, () => []);
     items.forEach((it, i) => rows[i % ROWS].push(it));
-    rowsEl.innerHTML = rows.map((r, ri) => `<div class="gal__row" data-row="${ri}">${r.map((it) => {
+    // short rows are repeated so every row can loop endlessly round the globe
+    const minPerRow = 14;
+    rows.forEach((r) => { const base = r.slice(); while (base.length && r.length < minPerRow) r.push(...base); });
+    rowsEl.innerHTML = rows.map((r, ri) => `<div class="gal__row" data-row="${ri}">${r.map((it, k) => {
       const href = `/work/${encodeURIComponent(it.w.slug)}${it.v ? `?v=${it.v}` : ''}`;
-      return `<a class="gal__item" href="${href}" data-link data-wi="${it.wi}" data-v="${it.v}">
-        <span class="gal__frame"><img src="${esc(it.src)}" alt="${esc(it.w.title)}" loading="lazy" decoding="async"></span>
+      const wide = (ri + k) % 5 === 2 ? ' gal__item--sq' : '';
+      return `<a class="gal__item${wide}" href="${href}" data-link data-wi="${it.wi}" data-v="${it.v}" draggable="false">
+        <span class="gal__frame"><img src="${esc(it.src)}" alt="${esc(it.w.title)}" loading="lazy" decoding="async" draggable="false"></span>
         <span class="gal__cap">${esc(it.w.title)}</span></a>`;
     }).join('')}</div>`).join('');
 
-    gsap.from(rowsEl.querySelectorAll('.gal__item'), { opacity: 0, y: 40, duration: 1.1, stagger: { each: 0.025, from: 'start' }, ease: 'expo.out', delay: 0.1 });
+    gsap.from(rowsEl, { opacity: 0, scale: 0.9, duration: 1.6, ease: 'expo.out', delay: 0.1 });
     gsap.from(el.querySelector('.gallery-page__title'), { yPercent: 60, opacity: 0, duration: 1.2, ease: 'expo.out' });
 
     const touch = matchMedia('(pointer: coarse)').matches;
@@ -86,46 +90,87 @@ export const gallery = {
         if (active === a) active = null;
       });
     });
-    if (touch) return () => {}; // phones: native horizontal swipe, captions under each still
-
-    // ---- mouse-driven auto scroll with parallax ----
+    // ---- the globe: four rows drifting left at their own pace, wrapped round a big sphere ----
     const rowEls = [...rowsEl.children];
-    const speeds = ROWS === 3 ? [1, 1.25, 0.8] : [1, 1.2];
-    let max = 0;
-    const measure = () => { max = Math.max(...rowEls.map((r, i) => (r.scrollWidth - innerWidth + 80) / speeds[i])); };
+    const speeds = [0.32, 0.5, 0.26, 0.42];          // px per frame, each row its own pace
+    const rowData = rowEls.map((r) => ({ el: r, items: [...r.children], w: [], L: 0, x: 0 }));
+    let H = 0, R = 0, RV = 0, gap = 0, itemH = 0;
+    const measure = () => {
+      const box = rowsEl.getBoundingClientRect();
+      H = box.height;
+      gap = Math.max(10, innerWidth * 0.012);
+      itemH = Math.min(((H - gap * (ROWS - 1)) / ROWS) * 0.82, innerWidth < 700 ? 74 : 150);
+      R = innerWidth < 700 ? innerWidth * 0.58 : Math.max(innerWidth * 0.6, 600);           // horizontal radius of the globe
+      RV = Math.max(H * 0.8, 300);                   // vertical radius (rows curve over the top and bottom)
+      rowData.forEach((rd) => {
+        let L = 0;
+        rd.w = rd.items.map((a) => { const w = itemH * (a.classList.contains('gal__item--sq') ? 1.0 : 16 / 9); a.style.width = `${w}px`; a.style.height = `${itemH}px`; return w; });
+        rd.pos = rd.w.map((w) => { const p = L + w / 2; L += w + gap; return p; });
+        rd.L = L;
+      });
+    };
     measure();
-    const state = { target: 0, current: 0, mx: innerWidth / 2 };
-    const onMove = (e) => { state.mx = e.clientX; };
-    const onWheel = (e) => { state.target += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * 1.1; };
+    const state = { push: 0, mx: innerWidth / 2, off: 0, vel: 0, drag: null, moved: 0 };
+    const onMove = (e) => {
+      if (e.pointerType === 'mouse') state.mx = e.clientX;
+      if (state.drag) {
+        const dx = e.clientX - state.drag.x;
+        state.drag.x = e.clientX; state.moved += Math.abs(dx);
+        state.off += dx; state.vel = dx;
+      }
+    };
+    const onDown = (e) => { state.drag = { x: e.clientX }; state.moved = 0; state.vel = 0; };
+    const onUp = () => { state.drag = null; };
+    const onWheel = (e) => { state.vel -= (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * 0.06; };
+    // a drag is not a click
+    rowsEl.addEventListener('click', (e) => { if (state.moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
+    galEl.addEventListener('pointerdown', onDown);
     addEventListener('pointermove', onMove, { passive: true });
+    addEventListener('pointerup', onUp);
+    addEventListener('pointercancel', onUp);
     addEventListener('wheel', onWheel, { passive: true });
     addEventListener('resize', measure);
-    const imgs = [...rowsEl.querySelectorAll('.gal__frame img')];
+    const t0 = performance.now();
     const tick = (time, dt) => {
-      // edge-scroll: the further the mouse is from the middle, the faster the wall glides that way
-      const nx = (state.mx / innerWidth) * 2 - 1;
-      const dead = 0.22;
-      const push = Math.abs(nx) < dead ? 0 : Math.sign(nx) * Math.pow((Math.abs(nx) - dead) / (1 - dead), 2);
-      state.target = gsap.utils.clamp(0, Math.max(0, max), state.target + push * 26 * (dt / 16.7));
-      const prev = state.current;
-      state.current += (state.target - state.current) * 0.08;
-      const vel = state.current - prev;
-      rowEls.forEach((r, i) => {
-        const x = -Math.min(state.current * speeds[i], Math.max(0, r.scrollWidth - innerWidth + 80));
-        r.style.transform = `translate3d(${x}px,0,0) skewX(${gsap.utils.clamp(-6, 6, -vel * 0.25)}deg)`;
+      const k = dt / 16.7;
+      // mouse near an edge speeds the globe that way (desktop only)
+      if (!touch && !state.drag) {
+        const nx = (state.mx / innerWidth) * 2 - 1, dead = 0.3;
+        const push = Math.abs(nx) < dead ? 0 : -Math.sign(nx) * Math.pow((Math.abs(nx) - dead) / (1 - dead), 2) * 9;
+        state.push += (push - state.push) * 0.06;
+      } else state.push *= 0.9;
+      if (!state.drag) { state.off += (state.vel + state.push) * k; state.vel *= Math.pow(0.94, k); }
+      const tt = (performance.now() - t0) / 1000;
+      rowData.forEach((rd, ri) => {
+        rd.x -= speeds[ri] * k;
+        const shift = rd.x + state.off * (0.85 + ri * 0.1);
+        // latitude of this row on the sphere
+        const yLin = (ri - (ROWS - 1) / 2) * (itemH + gap);
+        const phi = yLin / RV;
+        const cosP = Math.cos(phi), sinP = Math.sin(phi);
+        rd.items.forEach((a, j) => {
+          let x = (rd.pos[j] + shift) % rd.L;
+          if (x < 0) x += rd.L;
+          x -= rd.L / 2;                                // centre the loop on the screen
+          const th = x / R;
+          if (Math.abs(th) > 1.75) { a.style.visibility = 'hidden'; return; }
+          a.style.visibility = '';
+          const bob = Math.sin(tt * 0.8 + j * 1.7 + ri) * 4;   // gentle float
+          const X = R * Math.sin(th) * cosP;
+          const Y = RV * sinP + bob;
+          const Z = R * (Math.cos(th) * cosP - 1);
+          a.style.transform = `translate(-50%,-50%) translate3d(${X.toFixed(1)}px,${Y.toFixed(1)}px,${Z.toFixed(1)}px) rotateY(${th.toFixed(4)}rad) rotateX(${(-phi).toFixed(4)}rad)`;
+          a.style.opacity = Math.max(0, Math.min(1, (Math.cos(th) - 0.05) * 1.6)).toFixed(3);
+          a.style.zIndex = Math.round(1000 + Z);
+        });
       });
-      // inner parallax: each frame's picture drifts against its card
-      for (const img of imgs) {
-        const b = img.parentElement.getBoundingClientRect();
-        if (b.right < -50 || b.left > innerWidth + 50) continue;
-        const c = (b.left + b.width / 2 - innerWidth / 2) / innerWidth;
-        img.style.transform = `translate3d(${c * -14}%,0,0) scale(1.22)`;
-      }
     };
     gsap.ticker.add(tick);
     return () => {
       gsap.ticker.remove(tick);
       removeEventListener('pointermove', onMove);
+      removeEventListener('pointerup', onUp);
+      removeEventListener('pointercancel', onUp);
       removeEventListener('wheel', onWheel);
       removeEventListener('resize', measure);
       clearTimeout(dwell);
