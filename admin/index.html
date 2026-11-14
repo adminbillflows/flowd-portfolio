@@ -7,40 +7,41 @@
   <title>FlowD — หลังบ้าน</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./admin.css" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/admin/admin.css" />
 </head>
 <body>
-  <!-- login -->
-  <section class="login" id="login" hidden>
-    <form class="login__card" id="login-form">
-      <h1><img data-logo alt="FlowD"> <span>หลังบ้าน</span></h1>
-      <label>รหัสผ่าน<input type="password" name="password" autocomplete="current-password" required autofocus></label>
-      <button class="btn btn--primary" type="submit">เข้าสู่ระบบ</button>
-      <p class="error" id="login-error"></p>
-    </form>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- wrong link -->
+  <section class="denied" id="denied" hidden>
+    <img class="denied__logo" data-logo alt="FlowD">
+    <h1 class="denied__title">Wrong link</h1>
+    <p>ลิงก์หลังบ้านไม่ถูกต้อง ตรวจตัวอักษรในลิงก์อีกครั้ง</p>
+    <a class="pill" href="/">กลับหน้าเว็บ</a>
   </section>
 
   <!-- dashboard -->
   <div class="shell" id="shell" hidden>
-    <aside class="side">
-      <div class="brand"><img data-logo alt="FlowD"> <span>admin</span></div>
-      <nav>
-        <button class="tab is-active" data-tab="works">ผลงาน</button>
-        <button class="tab" data-tab="settings">ข้อมูลเว็บ</button>
-        <button class="tab" data-tab="messages">ข้อความติดต่อ <b id="msg-count"></b></button>
+    <header class="hud">
+      <a class="hud__logo" href="/" target="_blank" aria-label="เปิดหน้าเว็บ"><img data-logo alt="FlowD"><span>Studio</span></a>
+      <nav class="tabs">
+        <button class="tab is-active" data-tab="works">Works <span>ผลงาน</span></button>
+        <button class="tab" data-tab="settings">Site <span>ข้อมูลเว็บ</span></button>
+        <button class="tab" data-tab="messages">Inbox <span>ข้อความ</span> <b id="msg-count"></b></button>
       </nav>
-      <div class="side__foot">
-        <a href="/" target="_blank">เปิดหน้าเว็บ ↗</a>
-        <button id="logout">ออกจากระบบ</button>
+      <div class="hud__right">
+        <button class="hud__link" id="export" title="ดาวน์โหลดข้อมูลทั้งหมดเป็นไฟล์ seed.json">Backup ↓</button>
+        <a class="hud__link" href="/" target="_blank">View site ↗</a>
       </div>
-    </aside>
+    </header>
 
     <main class="main">
       <!-- works -->
       <section class="panel" data-panel="works">
         <header class="panel__head">
-          <div><h2>ผลงาน</h2><p class="hint">ลากแถวเพื่อเรียงลำดับ ลำดับนี้คือลำดับบนหน้าเว็บ</p></div>
+          <div><h2 class="page__title">Works<sup id="work-count"></sup></h2><p class="hint">ลากแถวเพื่อเรียงลำดับ ลำดับนี้คือลำดับบนหน้าเว็บ</p></div>
           <button class="btn btn--primary" id="new-work">+ เพิ่มผลงาน</button>
         </header>
         <div class="drop-hint" id="quick-drop">ลากไฟล์รูปหรือวิดีโอมาวางตรงนี้ เพื่อสร้างผลงานใหม่ทันที (ไฟล์แรกเป็นภาพปก)</div>
@@ -49,7 +50,7 @@
 
       <!-- settings -->
       <section class="panel" data-panel="settings" hidden>
-        <header class="panel__head"><div><h2>ข้อมูลเว็บ</h2><p class="hint">ข้อความที่แสดงบนหน้า Home, About และ Contact</p></div></header>
+        <header class="panel__head"><div><h2 class="page__title">Site</h2><p class="hint">ข้อความที่แสดงบนหน้า Home, About และ Contact</p></div></header>
         <form class="form" id="settings-form">
           <div class="row2">
             <label>ชื่อเว็บ<input name="siteName"></label>
@@ -69,7 +70,7 @@
 
       <!-- messages -->
       <section class="panel" data-panel="messages" hidden>
-        <header class="panel__head"><div><h2>ข้อความติดต่อ</h2><p class="hint">ข้อความที่ส่งมาจากฟอร์มหน้า Contact</p></div></header>
+        <header class="panel__head"><div><h2 class="page__title">Inbox</h2><p class="hint">ข้อความที่ส่งมาจากฟอร์มหน้า Contact</p></div></header>
         <ul class="messages" id="messages"></ul>
       </section>
     </main>
@@ -139,6 +140,6 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <script type="module" src="./admin.js"></script>
+  <script type="module" src="/admin/admin.js"></script>
 </body>
 </html>

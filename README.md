@@ -10,13 +10,14 @@
 ```bash
 cd flowd-portfolio
 npm install
-cp .env.example .env      # แล้วแก้ ADMIN_PASSWORD ในไฟล์ .env
+cp .env.example .env      # แล้วตั้ง ADMIN_KEY ในไฟล์ .env
 npm run dev
 ```
 
 เปิด
 - หน้าเว็บ: http://localhost:3000/
-- หลังบ้าน: http://localhost:3000/admin/ (ถ้ายังไม่ได้ตั้ง .env รหัสเริ่มต้นคือ `flowd-admin`)
+- หลังบ้าน: http://localhost:3000/studio-<ADMIN_KEY>/ ไม่มีหน้าล็อกอิน ใครมีลิงก์นี้แก้ข้อมูลได้ (ถ้าไม่ตั้ง ADMIN_KEY จะใช้ค่าเริ่มต้นในโค้ด ซึ่งเห็นได้ใน GitHub)
+- ปุ่ม Backup ในหลังบ้านดาวน์โหลดข้อมูลทั้งหมดเป็นไฟล์รูปแบบเดียวกับ `server/seed.json`
 
 โหมด dev แก้โค้ดแล้วหน้าเว็บอัปเดตเองทันที
 
@@ -82,7 +83,7 @@ admin/              หน้าหลังบ้าน
 
 1. สร้าง repository บน GitHub แล้ว push โค้ดนี้ขึ้นไป
 2. เข้า https://dashboard.render.com/blueprints → **New Blueprint Instance** → เลือก repository นี้
-3. Render จะอ่าน `render.yaml` แล้วถามค่า `ADMIN_PASSWORD` ให้ตั้งรหัสหลังบ้าน แล้วกด **Apply**
+3. Render จะอ่าน `render.yaml` แล้วถามค่า `ADMIN_KEY` (ตัวอักษร/ตัวเลขลับที่จะอยู่ในลิงก์หลังบ้าน) แล้วกด **Apply**
 4. รอ build ประมาณ 2–4 นาที จะได้ลิงก์แบบ `https://flowd-portfolio.onrender.com`
 
 ข้อจำกัดของแผนฟรี

@@ -1,8 +1,7 @@
-// FlowD portfolio server: public API + password-protected back office.
+// FlowD portfolio server: public API + back office behind a secret link (no login).
 // Storage is plain JSON files in ./data, uploads in ./data/uploads.
 import express from 'express';
 import multer from 'multer';
-import cookieParser from 'cookie-parser';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,7 +13,10 @@ loadEnv(path.join(root, '.env'));
 
 const isProd = process.argv.includes('--prod') || process.env.NODE_ENV === 'production';
 const PORT = Number(process.env.PORT) || 3000;
-const PASSWORD = process.env.ADMIN_PASSWORD || 'flowd-admin';
+// The back office lives at /<ADMIN_PATH>/ and the same key unlocks /api/admin/*.
+// Set ADMIN_KEY on the host to change the link (this repo is public, so the fallback below is visible on GitHub).
+const ADMIN_KEY = (process.env.ADMIN_KEY || 'x8m3q7tk2p').replace(/[^a-z0-9-]/gi, '');
+const ADMIN_PATH = `studio-${ADMIN_KEY}`;
 const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(root, 'data');
 const uploadsDir = path.join(dataDir, 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -39,19 +41,19 @@ function writeJSON(file, value) {
 const getWorks = () => readJSON(files.works).sort((a, b) => a.order - b.order);
 
 // ---------- auth ----------
-const sessions = new Map(); // token -> expiry
-const SESSION_MS = 7 * 24 * 3600 * 1000;
-const failures = new Map(); // ip -> { count, until }
-
-function checkPassword(input) {
-  const a = crypto.createHash('sha256').update(String(input || '')).digest();
-  const b = crypto.createHash('sha256').update(PASSWORD).digest();
-  return crypto.timingSafeEqual(a, b);
-}
+const failures = new Map(); // ip -> { count, until }: slows down guessing the key
 function requireAdmin(req, res, next) {
-  const token = req.cookies?.flowd_admin;
-  const exp = token && sessions.get(token);
-  if (!exp || exp < Date.now()) return res.status(401).json({ error: 'unauthorized' });
+  const ip = req.ip;
+  const f = failures.get(ip);
+  if (f && f.until > Date.now()) return res.status(429).json({ error: 'too_many_attempts' });
+  const a = crypto.createHash('sha256').update(String(req.get('x-admin-key') || '')).digest();
+  const b = crypto.createHash('sha256').update(ADMIN_KEY).digest();
+  if (!crypto.timingSafeEqual(a, b)) {
+    const count = (f?.count || 0) + 1;
+    failures.set(ip, { count, until: count >= 10 ? Date.now() + 60_000 : 0 });
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  failures.delete(ip);
   next();
 }
 
@@ -172,7 +174,6 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1); // behind Render/other proxies: real client IP for login rate limit
 app.use(express.json({ limit: '1mb' }));
-app.use(cookieParser());
 app.use('/uploads', express.static(uploadsDir, { maxAge: '7d' }));
 
 // public API
@@ -192,28 +193,12 @@ app.post('/api/contact', (req, res) => {
   res.json({ ok: true });
 });
 
-// auth
-app.post('/api/login', (req, res) => {
-  const ip = req.ip;
-  const f = failures.get(ip);
-  if (f && f.until > Date.now()) return res.status(429).json({ error: 'too_many_attempts' });
-  if (!checkPassword(req.body?.password)) {
-    const count = (f?.count || 0) + 1;
-    failures.set(ip, { count, until: count >= 5 ? Date.now() + 60_000 : 0 });
-    return res.status(401).json({ error: 'wrong_password' });
-  }
-  failures.delete(ip);
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, Date.now() + SESSION_MS);
-  res.cookie('flowd_admin', token, { httpOnly: true, sameSite: 'strict', secure: isProd && process.env.HTTPS === '1', maxAge: SESSION_MS });
-  res.json({ ok: true });
-});
-app.post('/api/logout', (req, res) => {
-  sessions.delete(req.cookies?.flowd_admin);
-  res.clearCookie('flowd_admin');
-  res.json({ ok: true });
-});
 app.get('/api/admin/me', requireAdmin, (_req, res) => res.json({ ok: true }));
+// everything in one file, same shape as server/seed.json (the free host forgets edits on restart)
+app.get('/api/admin/export', requireAdmin, (_req, res) => {
+  const works = getWorks().map(({ stills, stillsKey, ...w }) => w);
+  res.attachment('seed.json').type('json').send(JSON.stringify({ works, settings: readJSON(files.settings) }, null, 2));
+});
 
 // admin: works
 app.get('/api/admin/works', requireAdmin, (_req, res) => res.json(getWorks()));
@@ -294,12 +279,15 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'not_found' }));
 app.use((err, _req, res, _next) => { console.error(err); res.status(500).json({ error: err.message || 'server_error' }); });
 
 // ---------- front end ----------
-app.get('/admin', (req, res, next) => (req.originalUrl === '/admin' ? res.redirect('/admin/') : next()));
+// the back office only answers on its secret path; /admin itself is just the public site
+const isAdminPage = (p) => p === `/${ADMIN_PATH}` || p.startsWith(`/${ADMIN_PATH}/`);
+app.get(`/${ADMIN_PATH}`, (req, res, next) => (req.originalUrl === `/${ADMIN_PATH}` ? res.redirect(`/${ADMIN_PATH}/`) : next()));
 if (isProd) {
   const dist = path.join(root, 'dist');
   if (!fs.existsSync(dist)) { console.error('ยังไม่มีโฟลเดอร์ dist ให้รัน "npm run build" ก่อน'); process.exit(1); }
+  app.use('/admin', (_req, res) => res.sendFile(path.join(dist, 'index.html')));
   app.use(express.static(dist, { index: false }));
-  app.get('/admin/{*rest}', (_req, res) => res.sendFile(path.join(dist, 'admin', 'index.html')));
+  app.get(`/${ADMIN_PATH}/{*rest}`, (_req, res) => res.sendFile(path.join(dist, 'admin', 'index.html')));
   app.get('/{*rest}', (_req, res) => res.sendFile(path.join(dist, 'index.html')));
 } else {
   const { createServer } = await import('vite');
@@ -308,7 +296,7 @@ if (isProd) {
   // SPA fallback: serve the right html through Vite so HMR keeps working
   app.get('/{*rest}', async (req, res, next) => {
     try {
-      const isAdmin = req.path.startsWith('/admin');
+      const isAdmin = isAdminPage(req.path);
       const file = path.join(root, isAdmin ? 'admin/index.html' : 'index.html');
       const html = await vite.transformIndexHtml(req.originalUrl, fs.readFileSync(file, 'utf8'));
       res.type('html').send(html);
@@ -319,8 +307,8 @@ if (isProd) {
 app.listen(PORT, () => {
   console.log(`\n  FlowD ${isProd ? 'production' : 'dev'} server`);
   console.log(`  หน้าเว็บ:   http://localhost:${PORT}/`);
-  console.log(`  หลังบ้าน:  http://localhost:${PORT}/admin/`);
-  if (!process.env.ADMIN_PASSWORD) console.log('  (ยังไม่ได้ตั้ง ADMIN_PASSWORD ใน .env ใช้รหัสเริ่มต้น "flowd-admin")');
+  console.log(`  หลังบ้าน:  http://localhost:${PORT}/${ADMIN_PATH}/`);
+  if (!process.env.ADMIN_KEY) console.log('  (ยังไม่ได้ตั้ง ADMIN_KEY ใช้ลิงก์เริ่มต้น ซึ่งเห็นได้ใน GitHub)');
   console.log('');
 });
 
