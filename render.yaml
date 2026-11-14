@@ -14,5 +14,5 @@ services:
         value: "22"
       - key: HTTPS
         value: "1"
-      - key: ADMIN_PASSWORD
+      - key: ADMIN_KEY
         sync: false

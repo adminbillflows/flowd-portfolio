@@ -1,5 +1,7 @@
 import logoUrl from '../src/assets/logo.png';
 // FlowD back office (vanilla JS). Talks to /api/admin/* on the same server.
+// No login: the page lives at /studio-<key>/ and sends that key with every admin request.
+const KEY = (location.pathname.split('/')[1] || '').replace(/^studio-/, '');
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -7,8 +9,8 @@ const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<
 const state = { works: [], editing: null, cover: null, removeCover: false, gallery: [], hidden: new Set() };
 
 async function api(path, opts = {}) {
-  const res = await fetch(path, { credentials: 'same-origin', ...opts });
-  if (res.status === 401) { showLogin(); throw new Error('unauthorized'); }
+  const res = await fetch(path, { ...opts, headers: { ...(opts.headers || {}), 'x-admin-key': KEY } });
+  if (res.status === 401 || res.status === 429) { showDenied(); throw new Error('unauthorized'); }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
@@ -21,16 +23,20 @@ function toast(msg, bad = false) {
   clearTimeout(toast.t); toast.t = setTimeout(() => (t.className = 'toast'), 2600);
 }
 
-// ---------- auth ----------
-function showLogin() { $('#login').hidden = false; $('#shell').hidden = true; }
-async function showApp() { $('#login').hidden = true; $('#shell').hidden = false; await loadWorks(); loadMessages(); }
-$('#login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const res = await fetch('/api/login', json('POST', { password: e.target.password.value }));
-  if (res.ok) { e.target.reset(); $('#login-error').textContent = ''; showApp(); }
-  else $('#login-error').textContent = res.status === 429 ? 'ลองผิดหลายครั้ง รอ 1 นาทีแล้วลองใหม่' : 'รหัสผ่านไม่ถูกต้อง';
+// ---------- access ----------
+function showDenied() { $('#denied').hidden = false; $('#shell').hidden = true; }
+async function showApp() { $('#denied').hidden = true; $('#shell').hidden = false; await loadWorks(); loadMessages(); }
+
+// backup: the free host forgets edits when it restarts, so keep a copy (same shape as server/seed.json)
+$('#export').addEventListener('click', async () => {
+  try {
+    const res = await fetch('/api/admin/export', { headers: { 'x-admin-key': KEY } });
+    if (!res.ok) throw new Error(res.statusText);
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(await res.blob()), download: `flowd-seed-${new Date().toISOString().slice(0, 10)}.json` });
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast('ดาวน์โหลดข้อมูลแล้ว');
+  } catch (err) { toast('ดาวน์โหลดไม่สำเร็จ: ' + err.message, true); }
 });
-$('#logout').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); showLogin(); });
 
 // ---------- tabs ----------
 $$('.tab').forEach((b) => b.addEventListener('click', () => {
@@ -47,6 +53,7 @@ const thumb = (m, color) => !m ? `<span class="thumb thumb--empty" style="backgr
 
 async function loadWorks() {
   state.works = await api('/api/admin/works');
+  $('#work-count').textContent = state.works.length || '';
   const table = $('#work-table');
   table.innerHTML = state.works.length ? state.works.map((w, i) => `
     <li class="work" draggable="true" data-id="${w.id}">
@@ -213,10 +220,11 @@ function upload(method, url, body) {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest();
     x.open(method, url);
+    x.setRequestHeader('x-admin-key', KEY);
     x.upload.onprogress = (e) => { if (e.lengthComputable) bar.firstElementChild.style.width = (e.loaded / e.total) * 100 + '%'; };
     x.onload = () => {
       bar.hidden = true; bar.firstElementChild.style.width = '0';
-      if (x.status === 401) { showLogin(); return reject(new Error('unauthorized')); }
+      if (x.status === 401) { showDenied(); return reject(new Error('unauthorized')); }
       x.status < 300 ? resolve(JSON.parse(x.responseText)) : reject(new Error(x.responseText));
     };
     x.onerror = () => { bar.hidden = true; reject(new Error('network')); };
@@ -262,6 +270,6 @@ async function loadMessages() {
 function randomColor() { return '#' + [0, 0, 0].map(() => Math.floor(40 + Math.random() * 140).toString(16).padStart(2, '0')).join(''); }
 
 // boot
-fetch('/api/admin/me').then((r) => (r.ok ? showApp() : showLogin())).catch(showLogin);
+fetch('/api/admin/me', { headers: { 'x-admin-key': KEY } }).then((r) => (r.ok ? showApp() : showDenied())).catch(showDenied);
 
 document.querySelectorAll('[data-logo]').forEach((el) => (el.src = logoUrl));
