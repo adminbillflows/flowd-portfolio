@@ -99,9 +99,9 @@ export const gallery = {
       const box = rowsEl.getBoundingClientRect();
       H = box.height;
       gap = Math.max(10, innerWidth * 0.012);
-      itemH = Math.min(((H - gap * (ROWS - 1)) / ROWS) * 0.82, innerWidth < 700 ? 74 : 150);
-      R = innerWidth < 700 ? innerWidth * 0.58 : Math.max(innerWidth * 0.6, 600);           // horizontal radius of the globe
-      RV = Math.max(H * 0.8, 300);                   // vertical radius (rows curve over the top and bottom)
+      itemH = (H - gap * (ROWS - 1)) / ROWS;
+      R = innerWidth < 700 ? innerWidth * 1.15 : Math.max(innerWidth * 1.1, 900);           // horizontal radius of the globe
+      RV = Math.max(H * 1.8, 600);                   // vertical radius (rows curve over the top and bottom)
       rowData.forEach((rd) => {
         let L = 0;
         rd.w = rd.items.map((a) => { const w = itemH * (a.classList.contains('gal__item--sq') ? 1.0 : 16 / 9); a.style.width = `${w}px`; a.style.height = `${itemH}px`; return w; });
@@ -153,14 +153,14 @@ export const gallery = {
           if (x < 0) x += rd.L;
           x -= rd.L / 2;                                // centre the loop on the screen
           const th = x / R;
-          if (Math.abs(th) > 1.75) { a.style.visibility = 'hidden'; return; }
+          if (Math.abs(th) > 1.2) { a.style.visibility = 'hidden'; return; }
           a.style.visibility = '';
           const bob = Math.sin(tt * 0.8 + j * 1.7 + ri) * 4;   // gentle float
           const X = R * Math.sin(th) * cosP;
           const Y = RV * sinP + bob;
           const Z = R * (Math.cos(th) * cosP - 1);
           a.style.transform = `translate(-50%,-50%) translate3d(${X.toFixed(1)}px,${Y.toFixed(1)}px,${Z.toFixed(1)}px) rotateY(${th.toFixed(4)}rad) rotateX(${(-phi).toFixed(4)}rad)`;
-          a.style.opacity = Math.max(0, Math.min(1, (Math.cos(th) - 0.05) * 1.6)).toFixed(3);
+          a.style.opacity = Math.max(0, Math.min(1, (Math.cos(th) - 0.3) * 2.2)).toFixed(3);
           a.style.zIndex = Math.round(1000 + Z);
         });
       });

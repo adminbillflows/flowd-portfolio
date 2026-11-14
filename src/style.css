@@ -302,7 +302,7 @@ body[data-view='project'] .cursor { display: none; }
 .gallery-page__head { display: flex; align-items: baseline; gap: 18px; padding: 0 var(--gutter); }
 .gallery-page__head .page__kicker { margin: 0; }
 .gallery-page__title { font-family: var(--font-display); text-transform: uppercase; font-weight: 400; font-size: clamp(32px, 4vw, 56px); line-height: 1; margin: 0; }
-.gal { position: relative; min-height: 0; padding: 10px 0 120px; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+.gal { position: relative; min-height: 0; padding: 14px 0 18px; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
 .gal:active { cursor: grabbing; }
 .gal__rows { position: relative; height: 100%; perspective: 1300px; perspective-origin: 50% 50%; transform-style: preserve-3d; }
 .gal__row { position: absolute; inset: 0; transform-style: preserve-3d; pointer-events: none; }
@@ -321,8 +321,7 @@ body[data-view='project'] .cursor { display: none; }
 .gal-info__cta { position: absolute; right: 0; bottom: 4px; font-size: 13px; color: var(--fg); }
 .gal-hint { position: absolute; right: var(--gutter); top: 116px; margin: 0; font-size: 12px; color: var(--muted); }
 @media (pointer: coarse), (max-width: 700px) {
-  .gal { padding: 6px 0 40px; }
-  .gal__cap { display: block; position: absolute; left: 6px; bottom: 4px; right: 6px; font-size: 9px; line-height: 1.2; text-shadow: 0 1px 4px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gal { padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 14px); }
   .gal-info, .gal-hint { display: none; }
 }
 
