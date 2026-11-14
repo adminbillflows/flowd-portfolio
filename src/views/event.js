@@ -18,7 +18,9 @@ function media(w, wi) {
   const seen = new Set();
   const pics = [...(w.gallery || []).filter((g) => g.type === 'image').map((g) => g.url), ...(w.stills || []).map((s) => s.url)]
     .filter((u) => !seen.has(u) && seen.add(u)).map((src) => ({ kind: 'image', src }));
-  return [...videos, ...pics];
+  // short clips uploaded straight into the gallery (no YouTube/Vimeo link) play inline, muted and looping
+  const clips = (w.gallery || []).filter((g) => g.type === 'video').map((g) => ({ kind: 'clip', src: g.url }));
+  return [...videos, ...clips, ...pics];
 }
 
 const EMPTY = '<p class="empty ev-empty">Event ยังไม่มีข้อมูล เร็วๆ นี้ (เพิ่มได้จากหลังบ้าน ติ๊ก "เป็นงาน Event")</p>';
@@ -62,7 +64,9 @@ export const eventDetail = {
     const items = media(w, wi);
     const tile = (m) => m.kind === 'video'
       ? `<a class="ev-item ev-item--video" href="${m.href}" data-link><img src="${esc(m.src)}" alt="" loading="lazy"><span class="ev-item__play">▶ ${esc(m.label)}</span></a>`
-      : `<span class="ev-item"><img src="${esc(m.src)}" alt="${esc(w.title)}" loading="lazy"></span>`;
+      : m.kind === 'clip'
+        ? `<span class="ev-item"><video src="${esc(m.src)}" muted loop playsinline autoplay preload="metadata"></video></span>`
+        : `<span class="ev-item"><img src="${esc(m.src)}" alt="${esc(w.title)}" loading="lazy"></span>`;
     if (isPhone()) return panelsHTML({ view: 'event-detail', kicker: `${esc(w.title)}`, panels: [
       { cls: 'ph-evd ph-evd--intro', html: `<a class="back" href="/event" data-back><span class="arrow">←</span> กลับ</a><h1 class="project__title">${splitWords(w.title)}</h1><p class="ph-evd__meta">${esc([w.client, w.year, w.category].filter(Boolean).join(' · '))}</p>${w.description ? `<div class="ph-evd__text">${paragraphs(w.description)}</div>` : ''}<p class="ph__swipe">ปัดซ้ายเพื่อดูภาพและวิดีโอ →</p>` },
       ...items.map((m) => ({ cls: 'ph-evd', html: tile(m) })),

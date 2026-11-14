@@ -478,6 +478,72 @@
       "order": 20,
       "createdAt": "2026-11-13T18:02:04.637Z",
       "updatedAt": "2026-11-13T18:02:04.637Z"
+    },
+    {
+      "id": "w22",
+      "slug": "byd-x-netflix",
+      "title": "BYD x NETFLIX : ระบบหมุนหัว \"ยองฮี\"",
+      "client": "BYD x Netflix",
+      "category": "Event",
+      "year": "",
+      "role": "",
+      "credits": "",
+      "videos": [],
+      "description": "",
+      "color": "#e50914",
+      "featured": false,
+      "published": true,
+      "isEvent": true,
+      "cover": {
+        "url": "/events/byd-netflix/cover-doll-tunnel.jpg",
+        "type": "image",
+        "name": "cover-doll-tunnel.jpg"
+      },
+      "gallery": [
+        {
+          "url": "/events/byd-netflix/clip-head-turn.mp4",
+          "type": "video",
+          "name": "หัวตุ๊กตาหันหน้า (หน้างาน)"
+        },
+        {
+          "url": "/events/byd-netflix/cover-doll-tunnel.jpg",
+          "type": "image",
+          "name": "อุโมงค์ทางเข้า"
+        },
+        {
+          "url": "/events/byd-netflix/doll-face.jpg",
+          "type": "image",
+          "name": "หน้าตุ๊กตา"
+        },
+        {
+          "url": "/events/byd-netflix/neon-welcome.jpg",
+          "type": "image",
+          "name": "ซุ้มนีออน Welcome"
+        },
+        {
+          "url": "/events/byd-netflix/doll-detail.jpg",
+          "type": "image",
+          "name": "รายละเอียดงานผิว"
+        },
+        {
+          "url": "/events/byd-netflix/clip-remote-test.mp4",
+          "type": "video",
+          "name": "ทดสอบหันหัวด้วยรีโมต"
+        },
+        {
+          "url": "/events/byd-netflix/clip-workshop-rig.mp4",
+          "type": "video",
+          "name": "ทดสอบแกนหมุนในโรงงาน"
+        },
+        {
+          "url": "/events/byd-netflix/control-box.jpg",
+          "type": "image",
+          "name": "ตู้ควบคุมมอเตอร์"
+        }
+      ],
+      "order": 21,
+      "createdAt": "2026-11-14T13:15:00.000Z",
+      "updatedAt": "2026-11-14T13:15:00.000Z"
     }
   ],
   "settings": {
