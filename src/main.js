@@ -11,6 +11,7 @@ import { about } from './views/about.js';
 import { contact } from './views/contact.js';
 import { gallery } from './views/gallery.js';
 import logoUrl from './assets/logo.png';
+import { phoneMQ } from './phone.js';
 
 gsap.registerPlugin(ScrollTrigger, CustomEase);
 CustomEase.create('flow', '0.76, 0, 0.24, 1');
@@ -60,6 +61,7 @@ function render(path, { first = false } = {}) {
   document.title = path === '/' ? ctx.settings.siteName : `${view.title(ctx, params)} — ${ctx.settings.siteName}`;
   document.querySelectorAll('.menu a').forEach((a) => a.classList.toggle('is-current', a.getAttribute('href') === '/' ? path === '/' : path.startsWith(a.getAttribute('href'))));
   ctx.world?.setMode(view.mode, { instant: first });
+  syncPager(path);
   window.scrollTo(0, 0);
   // some views mount asynchronously (they fetch first) and hand back their cleanup later
   const token = ++renderId;
@@ -69,7 +71,7 @@ function render(path, { first = false } = {}) {
   reveals();
 }
 
-async function navigate(url, { push = true } = {}) {
+async function navigate(url, { push = true, dir = 1 } = {}) {
   const next = STATIC ? { pathname: url } : new URL(url, location.href);
   if (busy) return;
   if (next.pathname === currentPath() && push) { closeMenu(); return; }
@@ -88,17 +90,17 @@ async function navigate(url, { push = true } = {}) {
   }
   const tl = gsap.timeline();
   tl.set(panel, { visibility: 'visible' })
-    .fromTo(panel, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8, ease: 'flow' })
-    .fromTo(label, { yPercent: 100, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.6, ease: 'expo.out' }, '-=0.35')
-    .to(app, { y: -60, duration: 0.8, ease: 'flow' }, 0);
+    .fromTo(panel, { clipPath: dir > 0 ? 'inset(100% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8, ease: 'flow' })
+    .fromTo(label, { yPercent: 100 * dir, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.6, ease: 'expo.out' }, '-=0.35')
+    .to(app, { y: -60 * dir, duration: 0.8, ease: 'flow' }, 0);
   await tl;
   if (push) pushPath(next);
   closeMenu(true);
   render(next.pathname);
-  gsap.set(app, { y: 60 });
+  gsap.set(app, { y: 60 * dir });
   const out = gsap.timeline();
-  out.to(label, { yPercent: -100, opacity: 0, duration: 0.4, ease: 'expo.in' })
-    .to(panel, { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.9, ease: 'flow' }, '-=0.1')
+  out.to(label, { yPercent: -100 * dir, opacity: 0, duration: 0.4, ease: 'expo.in' })
+    .to(panel, { clipPath: dir > 0 ? 'inset(0% 0% 100% 0%)' : 'inset(100% 0% 0% 0%)', duration: 0.9, ease: 'flow' }, '-=0.1')
     .to(app, { y: 0, duration: 1.0, ease: 'expo.out' }, '<')
     .set(panel, { visibility: 'hidden' });
   await out;
@@ -112,10 +114,63 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('a[data-link], a[href^="/"]');
   if (!a || a.target === '_blank' || e.metaKey || e.ctrlKey || a.getAttribute('href').startsWith('/admin') || a.getAttribute('href').startsWith('/uploads')) return;
   e.preventDefault();
-  navigate(STATIC ? a.getAttribute('href').split('?')[0] : a.href);
+  const from = pageIndex(currentPath()), to = pageIndex(a.getAttribute('href').split('?')[0]);
+  navigate(STATIC ? a.getAttribute('href').split('?')[0] : a.href, { dir: from >= 0 && to >= 0 && to < from ? -1 : 1 });
 });
 addEventListener('popstate', () => { navDepth = Math.max(0, navDepth - 1); } );
 addEventListener('popstate', () => navigate(STATIC ? currentPath() : location.href, { push: false }));
+
+// ---------- phones: fixed pages, swipe up/down to move between them ----------
+const ORDER = [['/', 'Home'], ['/work', 'Works'], ['/gallery', 'Gallery'], ['/about', 'About'], ['/contact', 'Contact']];
+const pageIndex = (path) => ORDER.findIndex(([p]) => p === (path.replace(/\/+$/, '') || '/'));
+const pager = document.createElement('nav');
+pager.className = 'pager';
+pager.setAttribute('aria-label', 'หน้า');
+pager.innerHTML = `<div class="pager__dots">${ORDER.map(([p, t]) => `<a href="${p}" data-link aria-label="${t}"></a>`).join('')}</div>
+  <p class="pager__next"><span class="pager__arrow">↑</span><span class="pager__label"></span></p>`;
+document.body.appendChild(pager);
+function syncPager(path) {
+  const i = pageIndex(path);
+  document.body.classList.toggle('is-phone', phoneMQ.matches);
+  pager.classList.toggle('is-on', i >= 0);
+  pager.querySelectorAll('.pager__dots a').forEach((a, j) => a.classList.toggle('is-current', j === i));
+  const last = i === ORDER.length - 1;
+  pager.querySelector('.pager__arrow').textContent = last ? '↓' : '↑';
+  pager.querySelector('.pager__label').textContent = i < 0 ? '' : last ? ORDER[i - 1][1] : ORDER[i + 1][1];
+}
+phoneMQ.addEventListener?.('change', () => syncPager(currentPath()));
+/** Would this swipe scroll something inside the page instead (a long text, the form)? */
+function scrollsInside(el, down) {
+  for (; el && el !== document.body; el = el.parentElement) {
+    const cs = getComputedStyle(el);
+    if (!/(auto|scroll)/.test(cs.overflowY) || el.scrollHeight <= el.clientHeight + 2) continue;
+    if (down ? el.scrollTop + el.clientHeight < el.scrollHeight - 2 : el.scrollTop > 2) return true;
+  }
+  return false;
+}
+let swipe = null;
+document.addEventListener('touchstart', (e) => {
+  swipe = null;
+  if (!phoneMQ.matches || menuOpen || busy || e.touches.length > 1 || document.getElementById('gate')) return;
+  if (e.target.closest('input, textarea, select')) return;
+  const t = e.touches[0];
+  swipe = { x: t.clientX, y: t.clientY, t: performance.now(), target: e.target };
+}, { passive: true });
+document.addEventListener('touchend', (e) => {
+  const s = swipe; swipe = null;
+  if (!s) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - s.x, dy = t.clientY - s.y;
+  if (Math.abs(dy) < 60 || Math.abs(dy) < Math.abs(dx) * 1.3 || performance.now() - s.t > 1500) return;
+  const i = pageIndex(currentPath());
+  if (i < 0) return;
+  const up = dy < 0; // finger moved up: next page
+  if (scrollsInside(s.target, up)) return;
+  const j = i + (up ? 1 : -1);
+  if (j < 0 || j >= ORDER.length) return;
+  navigate(ORDER[j][0], { dir: up ? 1 : -1 });
+}, { passive: true });
+document.addEventListener('touchcancel', () => { swipe = null; }, { passive: true });
 
 // ---------- reveal on scroll ----------
 function reveals() {

@@ -110,20 +110,61 @@ export const gallery = {
       });
     };
     measure();
-    const state = { push: 0, mx: innerWidth / 2, off: 0, vel: 0, drag: null, moved: 0 };
+    const state = { push: 0, mx: innerWidth / 2, off: 0, vel: 0, drag: null, allow: null, lastPointer: 0 };
+    // A press only becomes a drag once it travels; the axis is locked then, so an up/down swipe
+    // (which changes page on phones) never nudges the globe, and a short still press is a tap.
     const onMove = (e) => {
       if (e.pointerType === 'mouse') state.mx = e.clientX;
-      if (state.drag) {
-        const dx = e.clientX - state.drag.x;
-        state.drag.x = e.clientX; state.moved += Math.abs(dx);
-        state.off += dx; state.vel = dx;
+      const d = state.drag;
+      if (!d || e.pointerId !== d.id) return;
+      if (!d.axis) {
+        const nx = e.clientX - d.x0, ny = e.clientY - d.y0;
+        if (Math.hypot(nx, ny) < (e.pointerType === 'mouse' ? 6 : 12)) return;
+        d.axis = Math.abs(nx) >= Math.abs(ny) ? 'x' : 'y';
+        d.x = e.clientX;
+      }
+      if (d.axis !== 'x') return;
+      const dx = e.clientX - d.x;
+      d.x = e.clientX;
+      state.off += dx; state.vel = dx;
+    };
+    // Browsers hit-test 3D-transformed links unreliably (a tap often lands on the row behind),
+    // so find the still under the finger from the on-screen boxes, front-most first.
+    const itemAt = (x, y) => {
+      let best = null, bz = -Infinity;
+      for (const rd of rowData) for (const a of rd.items) {
+        if (a.style.visibility === 'hidden' || +a.style.opacity < 0.2) continue;
+        const r = a.getBoundingClientRect();
+        if (x < r.left || x > r.right || y < r.top || y > r.bottom) continue;
+        const z = +a.style.zIndex || 0;
+        if (z > bz) { bz = z; best = a; }
+      }
+      return best;
+    };
+    const onDown = (e) => {
+      if (e.button > 0) return;
+      state.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, t: performance.now(), axis: null, item: itemAt(e.clientX, e.clientY) };
+      state.vel = 0;
+    };
+    const onUp = (e) => {
+      const d = state.drag;
+      if (!d || (e.pointerId !== undefined && e.pointerId !== d.id)) return;
+      state.drag = null; state.lastPointer = performance.now();
+      // a tap: open the still that was under the finger when it went down
+      if (e.type === 'pointerup' && !d.axis && d.item && performance.now() - d.t < 900) {
+        state.allow = d.item;
+        d.item.click();
       }
     };
-    const onDown = (e) => { state.drag = { x: e.clientX }; state.moved = 0; state.vel = 0; };
-    const onUp = () => { state.drag = null; };
     const onWheel = (e) => { state.vel -= (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * 0.06; };
-    // a drag is not a click
-    rowsEl.addEventListener('click', (e) => { if (state.moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
+    // the browser's own clicks are ignored: taps are decided above, so a drag never opens a still
+    // and a tap on a moving still always does. Keyboard Enter still works.
+    rowsEl.addEventListener('click', (e) => {
+      const item = e.target.closest('.gal__item');
+      if (item && item === state.allow) { state.allow = null; return; }
+      if (e.detail === 0 && performance.now() - state.lastPointer > 600) return;
+      e.preventDefault(); e.stopPropagation();
+    }, true);
     galEl.addEventListener('pointerdown', onDown);
     addEventListener('pointermove', onMove, { passive: true });
     addEventListener('pointerup', onUp);

@@ -2,11 +2,27 @@ import gsap from 'gsap';
 import { esc, pad } from '../util.js';
 import { coverHTML } from '../media.js';
 import { blip } from '../audio.js';
+import { isPhone, panelsHTML, mountPanels } from '../phone.js';
+
+const PER_PAGE = 4;
+function phoneHTML(ctx) {
+  const pages = [];
+  for (let i = 0; i < ctx.works.length; i += PER_PAGE) pages.push(ctx.works.slice(i, i + PER_PAGE).map((w, k) => [w, i + k]));
+  return panelsHTML({ view: 'works', kicker: `02 — Works · ${pad(ctx.works.length)}`, panels: pages.map((list) => ({ cls: 'ph-works', html: list.map(([w, i]) => `
+    <a class="ph-work" href="/work/${encodeURIComponent(w.slug)}?play" data-link>
+      <span class="ph-work__thumb">${coverHTML(w, i)}</span>
+      <span class="ph-work__num">${pad(i + 1)}</span>
+      <span class="ph-work__title">${esc(w.title)}</span>
+      <span class="ph-work__cat">${esc(w.category)}${w.year ? ` · ${esc(w.year)}` : ''}</span>
+    </a>`).join('') })) });
+}
+
 
 export const works = {
   mode: 'works',
   title: () => 'Works',
   render(ctx) {
+    if (isPhone()) return phoneHTML(ctx);
     const cats = [...new Set(ctx.works.map((w) => w.category))];
     const active = import.meta.env.VITE_STATIC === '1' ? 'all' : new URLSearchParams(location.search).get('c') || 'all';
     const count = (c) => ctx.works.filter((w) => c === 'all' || w.category === c).length;
@@ -33,6 +49,7 @@ export const works = {
     </section>`;
   },
   mount(el, ctx) {
+    if (el.querySelector('[data-ph]')) return mountPanels(el);
     const rows = [...el.querySelectorAll('.work-row')];
     const apply = (cat, animate = true) => {
       el.querySelectorAll('.filter').forEach((b) => { const on = b.dataset.cat === cat; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
