@@ -3,6 +3,9 @@ import { esc, pad } from '../util.js';
 import { coverHTML } from '../media.js';
 import { blip } from '../audio.js';
 import { isPhone, panelsHTML, mountPanels } from '../phone.js';
+import { driftHTML, mountDrift } from './drift.js';
+
+const listMode = () => import.meta.env.VITE_STATIC !== '1' && new URLSearchParams(location.search).get('view') === 'list';
 
 const PER_PAGE = 4;
 function phoneHTML(ctx) {
@@ -22,6 +25,7 @@ export const works = {
   mode: 'works',
   title: () => 'Works',
   render(ctx) {
+    if (!listMode()) return driftHTML();
     if (isPhone()) return phoneHTML(ctx);
     const cats = [...new Set(ctx.works.map((w) => w.category))];
     const active = import.meta.env.VITE_STATIC === '1' ? 'all' : new URLSearchParams(location.search).get('c') || 'all';
@@ -49,6 +53,7 @@ export const works = {
     </section>`;
   },
   mount(el, ctx) {
+    if (el.querySelector('[data-drift]')) return mountDrift(el, ctx);
     if (el.querySelector('[data-ph]')) return mountPanels(el);
     const rows = [...el.querySelectorAll('.work-row')];
     const apply = (cat, animate = true) => {
