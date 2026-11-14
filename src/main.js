@@ -48,6 +48,7 @@ function pushPath(next) {
   else history.pushState({}, '', next);
 }
 let cleanup = null;
+let renderId = 0;
 let busy = false;
 function render(path, { first = false } = {}) {
   const { view, params } = match(path);
@@ -60,7 +61,11 @@ function render(path, { first = false } = {}) {
   document.querySelectorAll('.menu a').forEach((a) => a.classList.toggle('is-current', a.getAttribute('href') === '/' ? path === '/' : path.startsWith(a.getAttribute('href'))));
   ctx.world?.setMode(view.mode, { instant: first });
   window.scrollTo(0, 0);
-  cleanup = view.mount(app, ctx, params) || null;
+  // some views mount asynchronously (they fetch first) and hand back their cleanup later
+  const token = ++renderId;
+  const res = view.mount(app, ctx, params);
+  if (res && typeof res.then === 'function') res.then((fn) => { if (token === renderId) cleanup = typeof fn === 'function' ? fn : null; else if (typeof fn === 'function') fn(); });
+  else cleanup = typeof res === 'function' ? res : null;
   reveals();
 }
 

@@ -366,3 +366,10 @@ body[data-view='project'] .cursor { display: none; }
 .reel__all { align-self: flex-end; margin: 4px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 12px); color: var(--fg); font: 400 14px/1 Montserrat, sans-serif; text-decoration: none; opacity: .8; }
 body[data-view='reel'] { overflow: hidden; }
 body[data-view='reel'] .cursor { display: none; }
+
+/* close button on the video stage: always there, even while the title is hidden */
+.stage__close { position: absolute; z-index: 6; top: calc(var(--gutter) + 64px); right: var(--gutter); width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%;
+  font-size: 18px; color: var(--fg); background: rgba(0,0,0,.35); border: 1px solid rgba(243,239,233,.25); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: background .3s, border-color .3s, transform .4s var(--ease); }
+.stage__close:hover { background: var(--accent); border-color: var(--accent); transform: rotate(90deg); }
+.stage:fullscreen .stage__close { top: var(--gutter); }

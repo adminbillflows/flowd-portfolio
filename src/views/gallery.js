@@ -51,7 +51,7 @@ export const gallery = {
     const minPerRow = 14;
     rows.forEach((r) => { const base = r.slice(); while (base.length && r.length < minPerRow) r.push(...base); });
     rowsEl.innerHTML = rows.map((r, ri) => `<div class="gal__row" data-row="${ri}">${r.map((it, k) => {
-      const href = `/work/${encodeURIComponent(it.w.slug)}${it.v ? `?v=${it.v}` : ''}`;
+      const href = `/work/${encodeURIComponent(it.w.slug)}?play${it.v ? `&v=${it.v}` : ''}`;
       const wide = (ri + k) % 5 === 2 ? ' gal__item--sq' : '';
       return `<a class="gal__item${wide}" href="${href}" data-link data-wi="${it.wi}" data-v="${it.v}" draggable="false">
         <span class="gal__frame"><img src="${esc(it.src)}" alt="${esc(it.w.title)}" loading="lazy" decoding="async" draggable="false"></span>

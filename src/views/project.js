@@ -80,6 +80,7 @@ function stageHTML(w, i, list, meta, next) {
         <div class="stage__poster">${coverHTML(w, i)}<span class="stage__countdown"></span></div>
       </div>
       <div class="stage__shield" aria-hidden="true"></div>
+      <a class="stage__close" href="/work" data-back aria-label="ปิด">✕</a>
       <div class="stage__ui">
         <a class="back" href="/work" data-back><span class="arrow">←</span> กลับ</a>
         <div class="stage__info">
@@ -179,9 +180,11 @@ function mountStage(el, stage) {
   show();
   // browsers only allow sound after a click, so if the Enter screen is still up, start when it is dismissed
   // show the cover for 2.5 s (with a progress line), then start the video; clicking the cover starts it right away
-  const DELAY = 2500;
+  // coming from a Gallery still (?play): no cover wait, start the clip right away
+  const DELAY = new URLSearchParams(location.search).has('play') ? 0 : 2500;
   const start = () => {
     shield.hidden = true;
+    if (!DELAY) { load(startAt()); return; }
     gsap.fromTo(poster.querySelector('.stage__countdown'), { scaleX: 0 }, { scaleX: 1, duration: DELAY / 1000, ease: 'none' });
     startTimer = setTimeout(() => load(startAt()), DELAY);
   };
